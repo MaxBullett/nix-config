@@ -1,0 +1,56 @@
+{
+  inputs,
+  system,
+  ...
+}:
+{
+  pre-commit-check = inputs.pre-commit-hooks.lib.${system}.run {
+    src = ./.;
+    default_stages = [ "pre-commit" ];
+    hooks = {
+      # General
+      check-added-large-files.enable = true;
+      check-case-conflicts.enable = true;
+      check-executables-have-shebangs.enable = true;
+      check-merge-conflicts.enable = true;
+      check-shebang-scripts-are-executable.enable = false; # .envrc false positive
+      check-symlinks.enable = true;
+      destroyed-symlinks = {
+        enable = true;
+        name = "destroyed-symlinks";
+        description = "detects symlinks which are changed to regular files with a content of a path which that symlink was pointing to.";
+        package = inputs.pre-commit-hooks.checks.${system}.pre-commit-hooks;
+        entry = "${inputs.pre-commit-hooks.checks.${system}.pre-commit-hooks}/bin/destroyed-symlinks";
+        types = [ "symlink" ];
+      };
+      detect-private-keys.enable = true;
+      end-of-file-fixer.enable = true;
+      fix-byte-order-marker.enable = true;
+      forbid-submodules = {
+        enable = true;
+        name = "forbid submodules";
+        description = "forbids any submodules in the repository";
+        language = "fail";
+        entry = "submodules are not allowed in this repository:";
+        types = [ "directory" ];
+      };
+      trim-trailing-whitespace.enable = true;
+
+      # Nix
+      deadnix = {
+        enable = true;
+        settings = {
+          edit = true;
+          noLambdaArg = true;
+        };
+      };
+      flake-checker.enable = true;
+      nixfmt-rfc-style.enable = true;
+      statix.enable = true;
+
+      # Shell scripts
+      shellcheck.enable = true;
+      shfmt.enable = true;
+    };
+  };
+}
