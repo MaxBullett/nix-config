@@ -3,7 +3,8 @@
   inputs = {
     ### Official sources
     # Nix Packages (https://search.nixos.org/packages)
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     # Hardware optimizations (https://github.com/NixOS/nixos-hardware)
     nixos-hardware.url = "github:nixos/nixos-hardware/master";
@@ -45,12 +46,10 @@
 
     ### Personal sources
     # Private secrets repo (https://github.com/MaxBullett/nix-secrets)
-    /*
-      nix-secrets = {
-        url = "git+ssh://git@github.com/MaxBullett/nix-secrets.git?ref=main&shallow=1";
-        inputs = { };
-      };
-    */
+    nix-secrets = {
+      url = "git+ssh://git@github.com/MaxBullett/nix-secrets.git?ref=main&shallow=1";
+      flake = false;
+    };
   };
 
   outputs =
@@ -120,11 +119,12 @@
           value = nixpkgs.lib.nixosSystem {
             specialArgs = {
               inherit inputs outputs lib;
-              isDarwin = false;
+              hostName = host;
+              hostUsers = [ ];
             };
-            modules = [ ./hosts/nixos/${host} ];
+            modules = [ ./hosts/${host} ];
           };
-        }) (builtins.attrNames (builtins.readDir ./hosts/nixos))
+        }) (builtins.attrNames (builtins.readDir ./hosts))
       );
     };
 }

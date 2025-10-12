@@ -24,7 +24,6 @@
 
     nativeBuildInputs = builtins.attrValues {
       inherit (pkgs)
-
         age
         cachix
         deadnix

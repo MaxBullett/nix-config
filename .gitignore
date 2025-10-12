@@ -1,7 +1,7 @@
+.direnv
+.idea
+.pre-commit-config.yaml
+latest.iso
 result
 result-*
-.pre-commit-config.yaml
-.direnv
 tmp
-latest.iso
-.idea
