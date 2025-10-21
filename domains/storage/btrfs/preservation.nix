@@ -15,8 +15,8 @@ let
     types
     ;
 
-  cfg = config.domains.storage.btrfs;
-  subcfg = cfg.preservation;
+  btrfs_cfg = config.domains.storage.btrfs;
+  cfg = btrfs_cfg.preservation;
 
   userBlueprintType = types.submodule {
     options = {
@@ -79,10 +79,10 @@ let
       }) mountCfg.users;
     };
 
-  preserveAtBlueprints = mapAttrs (_: mountBlueprint) subcfg.mounts;
+  preserveAtBlueprints = mapAttrs (_: mountBlueprint) cfg.mounts;
   fileSystemDefinitions = mapAttrs (_: mountCfg: {
     inherit (mountCfg) neededForBoot;
-  }) subcfg.mounts;
+  }) cfg.mounts;
 in
 {
   imports = [ inputs.preservation.nixosModules.default ];
@@ -126,7 +126,26 @@ in
     };
   };
 
-  config = mkIf (cfg.enable && subcfg.enable) {
+  config = mkIf (btrfs_cfg.enable && cfg.enable) {
+    assertions = [
+      {
+        assertion = btrfs_cfg.enable;
+        message = "domains.storage.btrfs.preservation requires domains.storage.btrfs.enable = true";
+      }
+      {
+        assertion = cfg.rootDevice != "";
+        message = "domains.storage.btrfs.preservation.rootDevice must be set";
+      }
+      {
+        assertion = cfg.rootSubvolume != "";
+        message = "domains.storage.btrfs.preservation.rootSubvolume must be set";
+      }
+      {
+        assertion = cfg.blankSnapshot != "";
+        message = "domains.storage.btrfs.preservation.blankSnapshot must be set";
+      }
+    ];
+
     # Configure preservation
     preservation = {
       enable = mkDefault true;
@@ -137,7 +156,7 @@ in
 
     # Configure root purge service
     boot.initrd.systemd = {
-      inherit (subcfg) emergencyAccess;
+      inherit (cfg) emergencyAccess;
 
       services.purge-root = {
         description = "Purge and restore root subvolume from blank snapshot";
@@ -156,14 +175,14 @@ in
 
           echo "Mounting btrfs root filesystem"
           MNTPOINT=$(mktemp -d)
-          mount -o subvol=/ ${lib.escapeShellArg subcfg.rootDevice} "$MNTPOINT"
+          mount -o subvol=/ ${lib.escapeShellArg cfg.rootDevice} "$MNTPOINT"
           trap 'umount "$MNTPOINT"; rm -d "$MNTPOINT"' EXIT
 
-          echo "Purging root subvolume: ${subcfg.rootSubvolume}"
-          btrfs subvolume delete -R "$MNTPOINT/${subcfg.rootSubvolume}" || true
+          echo "Purging root subvolume: ${cfg.rootSubvolume}"
+          btrfs subvolume delete -R "$MNTPOINT/${cfg.rootSubvolume}" || true
 
-          echo "Restoring root from snapshot: ${subcfg.blankSnapshot}"
-          btrfs subvolume snapshot "$MNTPOINT/${subcfg.blankSnapshot}" "$MNTPOINT/${subcfg.rootSubvolume}"
+          echo "Restoring root from snapshot: ${cfg.blankSnapshot}"
+          btrfs subvolume snapshot "$MNTPOINT/${cfg.blankSnapshot}" "$MNTPOINT/${cfg.rootSubvolume}"
 
           echo "Root subvolume restored successfully"
         '';

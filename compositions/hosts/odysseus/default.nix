@@ -17,6 +17,7 @@ in
     "passwords/root" = {
       neededForUsers = true;
     };
+    "cachix-token" = { };
   };
 
   networking.hostName = hostName;
@@ -37,6 +38,30 @@ in
   };
 
   domains = {
+    nix = {
+      daemon = {
+        builders-use-substitutes = true;
+        download-buffer-size = 500 * 1024 * 1024; # 500MB
+      };
+      nh = {
+        enable = true;
+        clean.enable = true;
+      };
+      nixpkgs.allowUnfree = true;
+      caches = {
+        extraCaches = [
+          {
+            url = "https://maxbullett.cachix.org";
+            key = "maxbullett.cachix.org-1:/6uBIAw06/eUnFR/UTgTk4w9ZfSAtrf3a1R9aOkpixY=";
+          }
+        ];
+        push = {
+          enable = true;
+          cacheName = "maxbullett";
+          tokenFile = config.sops.secrets."cachix-token".path;
+        };
+      };
+    };
     security.sops = {
       enable = true;
       sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];

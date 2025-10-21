@@ -80,10 +80,10 @@
     "nix-secrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1760694475,
-        "narHash": "sha256-yJtO+eMCQjhmEmZIO6JjlSvHD7XSIzn8ttGElh3D2O4=",
+        "lastModified": 1761002897,
+        "narHash": "sha256-lbeGo/OCtp+w37wWeN3QvUVJ2EJHVwiLOj8unuYLTyI=",
         "ref": "main",
-        "rev": "edbdc4db292ad010644f2e1b501b898ec504286b",
+        "rev": "90a32fec00d627be7c6b214a40fd7be07726b3ea",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/MaxBullett/nix-secrets.git"

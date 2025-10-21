@@ -27,6 +27,13 @@ in
   };
 
   config = mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.sshKeyPaths != [ ];
+        message = "domains.security.sops.sshKeyPaths must not be empty (required for decryption)";
+      }
+    ];
+
     sops = {
       defaultSopsFile = "${inputs.nix-secrets}/hosts/${config.networking.hostName}/secrets.yaml";
       validateSopsFiles = true;

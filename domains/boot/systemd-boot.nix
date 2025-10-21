@@ -19,7 +19,7 @@ in
 
     configurationLimit = mkOption {
       type = types.nullOr types.int;
-      default = 10;
+      default = 5;
       description = "Number of boot entries to keep in the EFI System Partition (set null to accept upstream default).";
     };
 
