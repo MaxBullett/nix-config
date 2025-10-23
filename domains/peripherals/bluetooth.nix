@@ -48,5 +48,17 @@ in
         "/var/lib/bluetooth"
       ];
     })
+
+    # LC3 codec support for Bluetooth LE Audio (when WirePlumber is available)
+    (mkIf
+      (config.services.pipewire.wireplumber.enable or false && cfg.settings.General.Experimental or false)
+      {
+        environment.etc."wireplumber/wireplumber.conf.d/10-bluez-lc3.conf".text = ''
+          monitor.bluez.properties = {
+            bluez5.enable-lc3 = true
+          }
+        '';
+      }
+    )
   ]);
 }
