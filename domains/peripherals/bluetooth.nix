@@ -11,10 +11,10 @@ let
     mkOption
     types
     ;
-  cfg = config.domains.devices.bluetooth;
+  cfg = config.domains.peripherals.bluetooth;
 in
 {
-  options.domains.devices.bluetooth = {
+  options.domains.peripherals.bluetooth = {
     enable = mkEnableOption "Bluetooth";
 
     powerOnBoot = mkOption {

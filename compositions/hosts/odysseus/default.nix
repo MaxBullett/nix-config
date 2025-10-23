@@ -109,7 +109,7 @@ in
       wifi.backend = "iwd";
       networks = [ "acheron" ];
     };
-    devices.bluetooth = {
+    peripherals.bluetooth = {
       enable = true;
       settings = {
         General.Experimental = true; # Enable LE Audio/LC3
