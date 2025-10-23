@@ -109,6 +109,12 @@ in
       wifi.backend = "iwd";
       networks = [ "acheron" ];
     };
+    devices.bluetooth = {
+      enable = true;
+      settings = {
+        General.Experimental = true; # Enable LE Audio/LC3
+      };
+    };
     desktop.cosmic = {
       enable = true;
       greeter.enable = true;
