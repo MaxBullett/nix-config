@@ -1,7 +1,7 @@
 {
   config,
-  l,
   hostName ? "odysseus",
+  l,
   ...
 }:
 let
@@ -103,6 +103,11 @@ in
           };
         };
       };
+    };
+    networking.networkmanager = {
+      enable = true;
+      wifi.backend = "iwd";
+      networks = [ "acheron" ];
     };
     desktop.cosmic = {
       enable = true;

@@ -66,7 +66,7 @@ in
 
     services.desktopManager.cosmic = {
       enable = true;
-      xwayland.enable = cfg.xwayland.enable;
+      inherit (cfg) xwayland;
     };
 
     # Fix clipboard issues in COSMIC

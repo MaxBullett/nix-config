@@ -345,6 +345,103 @@ ls -l /run/secrets/
 domains.feature.tokenFile = config.sops.secrets."token".path;
 ```
 
+## Domain-Managed Secrets with Templates
+
+Some domains can automatically generate configuration files from secrets. For example, NetworkManager connection files from WiFi credentials.
+
+### Pattern: Domain with Secret Networks
+
+**In nix-secrets/hosts/hostname/secrets.yaml:**
+```yaml
+networks:
+  home-wifi:
+    ssid: "MyHomeWiFi"
+    psk: "super-secret-password"
+  work-wifi:
+    ssid: "WorkNetwork"
+    psk: "work-password"
+  hidden-network:
+    ssid: "HiddenSSID"
+    psk: "hidden-password"
+    hidden: "true"  # Optional: for hidden SSIDs
+```
+
+**In domain module (e.g., domains/networking/networkmanager.nix):**
+```nix
+options.domains.networking.networkmanager = {
+  networks = mkOption {
+    type = types.listOf types.str;
+    default = [];
+    description = "List of network names to configure from SOPS secrets.";
+    example = [ "home-wifi" "work-wifi" ];
+  };
+};
+
+config = mkIf cfg.enable {
+  # Declare SOPS secrets for each network
+  sops.secrets = lib.genAttrs cfg.networks (name: {
+    sopsFile = lib.mkDefault "${inputs.nix-secrets}/hosts/${hostName}/secrets.yaml";
+  });
+
+  # Generate NetworkManager connection files using templates
+  sops.templates = lib.genAttrs cfg.networks (name: {
+    content = ''
+      [connection]
+      id=${name}
+      type=wifi
+
+      [wifi]
+      ssid=''${config.sops.placeholder."networks/${name}/ssid"}
+
+      [wifi-security]
+      key-mgmt=wpa-psk
+      psk=''${config.sops.placeholder."networks/${name}/psk"}
+
+      [ipv4]
+      method=auto
+
+      [ipv6]
+      method=auto
+    '';
+    path = "/etc/NetworkManager/system-connections/${name}.nmconnection";
+    mode = "0600";
+  });
+};
+```
+
+**In host configuration:**
+```nix
+domains.networking.networkmanager = {
+  enable = true;
+  wifi.backend = "iwd";
+  networks = [ "home-wifi" "work-wifi" "hidden-network" ];
+};
+```
+
+### How This Works
+
+1. **SOPS placeholder:** `config.sops.placeholder."path/to/secret"` references secrets without hardcoding paths
+2. **Template generation:** SOPS templates combine plaintext with secret placeholders
+3. **Runtime decryption:** Secrets are decrypted and templates are rendered at activation
+4. **Domain ownership:** Domain knows the file format, host specifies which secrets to use
+
+### Benefits
+
+- ✅ Domain encapsulates configuration format knowledge
+- ✅ Secrets stay in nix-secrets repo, properly encrypted
+- ✅ No plaintext secrets in nix store
+- ✅ Host just lists network names, no format details
+- ✅ Type-safe: domain validates structure
+
+### Important: Declarative Management
+
+**Connection files are regenerated on every rebuild.** This means:
+- ✅ Your nix-secrets is the source of truth
+- ✅ Secret changes propagate automatically on rebuild
+- ❌ Manual edits via NetworkManager GUI will be overwritten
+
+If you need to modify a network (change password, add settings), update the secret in nix-secrets and rebuild. This is the NixOS way - declarative and reproducible.
+
 ## Security Best Practices
 
 1. **Never commit unencrypted secrets** - sops handles encryption automatically

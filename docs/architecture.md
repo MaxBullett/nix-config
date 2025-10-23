@@ -162,7 +162,7 @@ domains.nix.caches.push = {
 };
 ```
 
-### Pattern A: Conditional Activation
+### Conditional Activation
 
 Capability domains use conditional activation with `mkIf`:
 
@@ -174,7 +174,7 @@ config = mkIf cfg.enable {
 };
 ```
 
-### Pattern C: Assertions
+### Assertions
 
 Use assertions to validate dependencies and provide clear error messages:
 
@@ -194,6 +194,42 @@ config = mkIf cfg.enable {
 ```
 
 **Important:** Check actual NixOS config values, not other domain options, to avoid coupling.
+
+### Conditional Persistence
+
+Domains are responsible for declaring their own persistence needs when using ephemeral root. This is a **one-way dependency** on the preservation platform, not cross-domain coupling.
+
+**Rationale:** Each domain knows what data it needs to persist. Declaring this in the domain:
+- Maintains bounded contexts (domain owns its data requirements)
+- Zero boilerplate for users (automatic persistence)
+- Self-documenting (persistence declared alongside the feature)
+- Graceful degradation (works even if preservation disabled)
+
+**Pattern:**
+```nix
+config = mkIf cfg.enable {
+  # Domain's normal configuration
+  networking.networkmanager.enable = true;
+
+  # Conditional persistence (only if ephemeral root enabled)
+  domains.storage.btrfs.preservation.mounts."/persist".directories =
+    mkIf config.domains.storage.btrfs.preservation.enable [
+      "/etc/NetworkManager/system-connections"
+      "/var/lib/NetworkManager"
+    ];
+};
+```
+
+**Why this doesn't violate "No Cross-Domain Coupling":**
+
+This is analogous to using NixOS platform options like `networking.*` or `services.*`. Domains are:
+- **Not modifying another domain's behavior** (preservation's logic is unchanged)
+- **Contributing to a shared platform interface** (preservation provides options for this purpose)
+- **Following a one-way dependency** (domain → platform, not bidirectional)
+
+The preservation domain provides options specifically designed for domains to contribute to, similar to how NixOS provides `environment.systemPackages` for packages or `users.users` for user definitions.
+
+**When preservation is disabled:** The paths simply don't get added (NixOS module system handles the merge), and the system works normally with persistent root.
 
 ## Anti-Patterns (Forbidden)
 
