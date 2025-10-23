@@ -115,9 +115,8 @@ in
         General.Experimental = true; # Enable LE Audio/LC3
       };
     };
-    audio.pipewire = {
-      enable = true;
-    };
+    audio.pipewire.enable = true;
+    printing.cups.enable = true;
     desktop.cosmic = {
       enable = true;
       greeter.enable = true;
