@@ -113,52 +113,63 @@ domains.nix.caches.push = {
 
 ## User Configuration Patterns
 
-### System-Level User Config
+### Complete User Configuration
+
+**All user configuration should be in a single file** (`default.nix`):
 
 ```nix
 # compositions/users/<username>/default.nix
 {
   config,
-  hostName,
+  inputs,
+  pkgs,
   ...
 }:
+let
+  userName = "max";
+  secretKey = "passwords/${userName}";
+in
 {
-  users.users.max = {
+  # SOPS secrets
+  sops.secrets."${secretKey}" = {
+    sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
+    neededForUsers = true;
+  };
+
+  # System-level user configuration
+  users.users.${userName} = {
     isNormalUser = true;
-    uid = 1000;
     extraGroups = [
       "wheel"
       "networkmanager"
       "video"
       "audio"
     ];
-    shell = pkgs.zsh;
-    hashedPasswordFile = config.sops.secrets."passwords/max".path;
-  };
-}
-```
-
-### Home Manager User Config
-
-```nix
-# compositions/users/<username>/home.nix
-{ pkgs, ... }:
-{
-  home.packages = with pkgs; [
-    vim
-    git
-    htop
-    ripgrep
-    fd
-  ];
-
-  programs.git = {
-    enable = true;
-    userName = "Max";
-    userEmail = "max@example.com";
+    hashedPasswordFile = config.sops.secrets."${secretKey}".path;
   };
 
-  home.stateVersion = "25.05";
+  # Home Manager configuration
+  home-manager.users.${userName} = {
+    # Home settings
+    home = {
+      username = userName;
+      homeDirectory = "/home/${userName}";
+      packages = with pkgs; [
+        vim
+        htop
+        ripgrep
+        fd
+      ];
+      stateVersion = "25.05";
+    };
+
+    # Programs
+    programs.git = {
+      enable = true;
+      userName = "Max";
+      userEmail = "max@example.com";
+    };
+  };
 }
 ```
 
@@ -180,6 +191,74 @@ domains.nix.caches.push = {
   };
 }
 ```
+
+### Hybrid Domain User Config (Home-Manager)
+
+**For domains that need both system and user configuration** (shells, editors, etc.):
+
+```nix
+# compositions/users/<username>/default.nix
+{
+  config,
+  pkgs,
+  ...
+}:
+let
+  userName = "max";
+in
+{
+  # System-level user setup
+  users.users.${userName} = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "networkmanager" ];
+    # Note: shell is set automatically by the nushell domain
+  };
+
+  # Home-manager configuration with hybrid domains
+  home-manager.users.${userName} = {
+    # Nushell configuration (hybrid domain)
+    domains.shell.nushell = {
+      enable = true;
+      plugins = with pkgs.nushellPlugins; [
+        polars
+        gstat
+        formats
+        query
+        net
+        desktop_notifications
+      ];
+      shellAliases = {
+        ll = "ls -l";
+        la = "ls -la";
+        ".." = "cd ..";
+        "..." = "cd ../..";
+      };
+    };
+
+    # Editor configuration (hybrid domain - when implemented)
+    domains.editors.helix = {
+      enable = true;
+      command = "hx";
+      # ... helix-specific options
+    };
+
+    # Other home-manager config
+    home.packages = with pkgs; [
+      htop
+      ripgrep
+      fd
+    ];
+
+    home.stateVersion = "25.05";
+  };
+}
+```
+
+**Key benefits:**
+- No username repetition (`domains.shell.nushell.max` → `domains.shell.nushell`)
+- Domain automatically handles both system setup and user config
+- Type-safe configuration with clear option types
+- Persistence automatically managed by the domain
 
 ## Domain Module Patterns
 

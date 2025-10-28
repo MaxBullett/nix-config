@@ -109,6 +109,109 @@ config = mkMerge [
 ];
 ```
 
+### Hybrid Domains
+
+**Purpose:** Domains that require both system-level and per-user configuration
+
+**When to use:**
+- Shells (nushell, zsh) - Need system registration + user config
+- Desktop environments - Need system services + user preferences
+- Editors with language servers - Need system tools + user settings
+
+**Requirements:**
+- Define options under `home-manager.users.<name>.domains.*` (via `sharedModules`)
+- Read enabled users from `home-manager.users` in system config
+- Configure both system-level and user-level settings
+- No username repetition in configuration
+
+**Pattern:**
+```nix
+# domains/shell/nushell.nix
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+let
+  # Collect all users with nushell enabled
+  enabledUsers = filterAttrs (
+    _: userCfg: userCfg.domains.shell.nushell.enable or false
+  ) config.home-manager.users;
+
+  anyEnabled = enabledUsers != { };
+
+  # Home-manager module that provides per-user options
+  nushellHomeModule = {
+    config,
+    lib,
+    osConfig,
+    ...
+  }: {
+    options.domains.shell.nushell = {
+      enable = mkEnableOption "nushell";
+      plugins = mkOption { ... };
+      # ... user-specific options
+    };
+
+    config = mkIf config.domains.shell.nushell.enable {
+      # User-level configuration (home-manager)
+      xdg.configFile."nushell/config.nu".text = ...;
+      home.packages = [ ... ];
+    };
+  };
+in
+{
+  config = mkMerge [
+    # Inject home-manager module into all users
+    {
+      home-manager.sharedModules = [ nushellHomeModule ];
+    }
+
+    # System-level configuration (when any user has it enabled)
+    (mkIf anyEnabled {
+      environment.shells = [ pkgs.nushell ];
+      environment.systemPackages = [ pkgs.nushell ];
+
+      # Set shell for each enabled user
+      users.users = mapAttrs (username: _: {
+        shell = pkgs.nushell;
+      }) enabledUsers;
+    })
+
+    # Conditional persistence
+    (mkIf (anyEnabled && preservationEnabled) {
+      domains.storage.btrfs.preservation.mounts."/persist" = {
+        users = mapAttrs (username: _: {
+          directories = [ ".config/nushell" ".local/share/nushell" ];
+        }) enabledUsers;
+      };
+    })
+  ];
+}
+```
+
+**Usage in user config:**
+```nix
+# compositions/users/max/default.nix
+{
+  home-manager.users.max = {
+    # No username repetition!
+    domains.shell.nushell = {
+      enable = true;
+      plugins = with pkgs.nushellPlugins; [ polars gstat ];
+      shellAliases.ll = "ls -l";
+    };
+  };
+}
+```
+
+**Benefits:**
+- ✅ No username repetition in options path
+- ✅ Clear separation: user config in home-manager, system in domains
+- ✅ Type-safe per-user configuration
+- ✅ Automatic system-level setup when any user enables it
+
 ## DDD Principles
 
 ### Bounded Contexts
