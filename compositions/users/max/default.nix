@@ -30,21 +30,17 @@ in
   # Home Manager configuration
   home-manager.users.${userName} = {
     # Nushell shell configuration
-    domains.shell.nushell = {
-      enable = true;
-      plugins = with pkgs.nushellPlugins; [
-        polars
-        gstat
-        formats
-        query
-        desktop_notifications
-      ];
-      shellAliases = {
-        ll = "ls -l";
-        la = "ls -la";
-        ".." = "cd ..";
-        "..." = "cd ../..";
+    domains.shell = {
+      nushell = {
+        enable = true;
+        shellAliases = {
+          ll = "ls -l";
+          la = "ls -la";
+          ".." = "cd ..";
+          "..." = "cd ../..";
+        };
       };
+      starship.enable = true;
     };
 
     # Home configuration
