@@ -1,6 +1,7 @@
 {
   config,
   inputs,
+  pkgs,
   ...
 }:
 let
@@ -8,8 +9,7 @@ let
   secretKey = "passwords/${userName}";
 in
 {
-  home-manager.users.${userName} = import ./home.nix;
-
+  # SOPS secrets for this user
   sops = {
     secrets."${secretKey}" = {
       sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
@@ -17,6 +17,7 @@ in
     };
   };
 
+  # System-level user configuration
   users.users.${userName} = {
     isNormalUser = true;
     extraGroups = [
@@ -24,5 +25,40 @@ in
       "networkmanager"
     ];
     hashedPasswordFile = config.sops.secrets."${secretKey}".path;
+  };
+
+  # Home Manager configuration
+  home-manager.users.${userName} = {
+    # Nushell shell configuration
+    domains.shell.nushell = {
+      enable = true;
+      plugins = with pkgs.nushellPlugins; [
+        polars
+        gstat
+        formats
+        query
+        desktop_notifications
+      ];
+      shellAliases = {
+        ll = "ls -l";
+        la = "ls -la";
+        ".." = "cd ..";
+        "..." = "cd ../..";
+      };
+    };
+
+    # Home configuration
+    home = {
+      username = userName;
+      homeDirectory = "/home/${userName}";
+      packages = with pkgs; [
+        htop
+        jq
+      ];
+      stateVersion = "25.05";
+    };
+
+    # Git configuration
+    programs.git.enable = true;
   };
 }

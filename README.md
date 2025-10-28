@@ -15,7 +15,7 @@ cp -r compositions/hosts/odysseus compositions/hosts/<hostname>
 
 # 3. Create or copy a user
 cp -r compositions/users/max compositions/users/<username>
-# Edit: default.nix, home.nix
+# Edit: default.nix
 
 # 4. Add user to host
 # In compositions/hosts/<hostname>/default.nix:
