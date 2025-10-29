@@ -89,16 +89,6 @@ in
       ];
       description = "Users trusted to connect to the Nix daemon with elevated privileges.";
     };
-
-    extraOptions = mkOption {
-      type = types.lines;
-      default = "";
-      description = "Additional nix.conf configuration.";
-      example = ''
-        keep-outputs = true
-        keep-derivations = true
-      '';
-    };
   };
 
   config = {
@@ -123,14 +113,16 @@ in
         # Recommended defaults
         warn-dirty = mkDefault false;
         http-connections = mkDefault 50;
+
+        # Keep outputs and derivations for direnv/nix-direnv
+        keep-outputs = true;
+        keep-derivations = true;
       };
 
       gc = mkIf cfg.gc.automatic {
         automatic = true;
         inherit (cfg.gc) dates options;
       };
-
-      inherit (cfg) extraOptions;
     };
   };
 }
