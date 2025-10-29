@@ -15,7 +15,7 @@ in
       example = "Europe/Berlin";
     };
 
-    locale = mkOption {
+    defaultLocale = mkOption {
       type = types.str;
       description = "The default locale for the system.";
       example = "en_US.UTF-8";
@@ -43,8 +43,7 @@ in
 
     # Locale settings
     i18n = {
-      defaultLocale = cfg.locale;
-      inherit (cfg) extraLocaleSettings;
+      inherit (cfg) defaultLocale extraLocaleSettings;
     };
 
     # Console keyboard layout

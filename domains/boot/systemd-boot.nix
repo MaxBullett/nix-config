@@ -47,8 +47,7 @@ in
       loader = {
         systemd-boot = {
           enable = mkDefault true;
-          inherit (cfg) configurationLimit;
-          inherit (cfg) editor;
+          inherit (cfg) configurationLimit editor;
         };
         inherit (cfg) timeout;
         efi = { inherit (cfg) canTouchEfiVariables; };

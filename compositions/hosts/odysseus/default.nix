@@ -39,7 +39,7 @@ in
   domains = {
     system.localization = {
       timeZone = "Europe/Berlin";
-      locale = "en_IE.UTF-8";
+      defaultLocale = "en_IE.UTF-8";
       extraLocaleSettings = {
         LC_TIME = "en_DK.UTF-8";
       };
