@@ -50,7 +50,7 @@ let
 
         ${optionalString (config.domains.editors.helix.enable or false) ''
           # Set EDITOR and VISUAL
-          $env.EDITOR = "${config.domains.editors.helix.command or "hx"}"
+          $env.EDITOR = "hx"
           $env.VISUAL = $env.EDITOR
         ''}
 
