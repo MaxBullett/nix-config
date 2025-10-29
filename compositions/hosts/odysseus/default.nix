@@ -128,9 +128,12 @@ in
     };
     audio.pipewire.enable = true;
     printing.cups.enable = true;
-    desktop.cosmic = {
-      enable = true;
-      greeter.enable = true;
+    desktop = {
+      fonts.enable = true;
+      cosmic = {
+        enable = true;
+        greeter.enable = true;
+      };
     };
     development.docker.enable = true;
   };
