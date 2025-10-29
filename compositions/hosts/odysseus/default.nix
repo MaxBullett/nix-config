@@ -119,6 +119,7 @@ in
       wifi.backend = "iwd";
       networks = [ "acheron" ];
     };
+    hardware.power-profiles-daemon.enable = true;
     peripherals.bluetooth = {
       enable = true;
       settings = {
