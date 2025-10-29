@@ -66,7 +66,10 @@ in
       enable = true;
       sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
     };
-    boot.systemd-boot.enable = true;
+    boot = {
+      plymouth.enable = true;
+      systemd-boot.enable = true;
+    };
     storage.btrfs = {
       enable = true;
       preservation = {
