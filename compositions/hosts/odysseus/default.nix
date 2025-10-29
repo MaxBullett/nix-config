@@ -21,7 +21,6 @@ in
   };
 
   networking.hostName = hostName;
-  time.timeZone = "Europe/Berlin";
 
   environment.etc.machine-id.source = "${config.sops.secrets."machine-id".path}";
 
@@ -38,6 +37,14 @@ in
   };
 
   domains = {
+    system.localization = {
+      timeZone = "Europe/Berlin";
+      locale = "en_IE.UTF-8";
+      extraLocaleSettings = {
+        LC_TIME = "en_DK.UTF-8";
+      };
+      keyboardLayout = "us";
+    };
     nix = {
       daemon = {
         builders-use-substitutes = true;
