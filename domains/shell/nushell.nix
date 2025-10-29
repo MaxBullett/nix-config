@@ -54,9 +54,9 @@ let
           $env.VISUAL = $env.EDITOR
         ''}
 
-        ${optionalString (config.domains.cli.yazi.enable or false) ''
+        ${optionalString (config.domains.tools.yazi.enable or false) ''
           # Yazi wrapper for cd-on-quit
-          def --env ${config.domains.cli.yazi.wrapperName or "y"} [...args] {
+          def --env ${config.domains.tools.yazi.wrapperName or "y"} [...args] {
             let tmp = (mktemp -t "yazi-cwd.XXXXXX")
             yazi ...$args --cwd-file $tmp
             let cwd = (open $tmp)
