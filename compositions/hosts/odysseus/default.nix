@@ -132,6 +132,7 @@ in
       enable = true;
       greeter.enable = true;
     };
+    development.docker.enable = true;
   };
 
   system.stateVersion = "25.05";

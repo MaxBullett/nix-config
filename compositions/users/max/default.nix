@@ -1,6 +1,7 @@
 {
   config,
   inputs,
+  lib,
   pkgs,
   ...
 }:
@@ -23,7 +24,9 @@ in
     extraGroups = [
       "wheel"
       "networkmanager"
-    ];
+    ]
+    # Conditionally add docker group if docker is enabled
+    ++ lib.optional (config.virtualisation.docker.enable or false) "docker";
     hashedPasswordFile = config.sops.secrets."${secretKey}".path;
   };
 
