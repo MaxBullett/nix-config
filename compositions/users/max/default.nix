@@ -29,18 +29,36 @@ in
 
   # Home Manager configuration
   home-manager.users.${userName} = {
-    # Nushell shell configuration
-    domains.shell = {
-      nushell = {
-        enable = true;
-        shellAliases = {
-          ll = "ls -l";
-          la = "ls -la";
-          ".." = "cd ..";
-          "..." = "cd ../..";
+    # Domain configuration
+    domains = {
+      # Shell configuration
+      shell = {
+        nushell = {
+          enable = true;
+          shellAliases = {
+            ll = "ls -l";
+            la = "ls -la";
+            ".." = "cd ..";
+            "..." = "cd ../..";
+          };
         };
+        starship.enable = true;
+        zoxide.enable = true;
+        atuin.enable = true;
+        carapace.enable = true;
       };
-      starship.enable = true;
+
+      # Editor configuration
+      editors.helix = {
+        enable = true;
+        theme = "catppuccin_macchiato";
+      };
+
+      # Development tools
+      development.direnv.enable = true;
+
+      # CLI tools
+      tools.yazi.enable = true;
     };
 
     # Home configuration
