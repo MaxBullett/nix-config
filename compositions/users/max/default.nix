@@ -105,6 +105,9 @@ mkMerge [
             mountPoint = "/preserve";
           };
         };
+
+        # Applications
+        applications.firefox.enable = true;
       };
 
       # Home configuration
