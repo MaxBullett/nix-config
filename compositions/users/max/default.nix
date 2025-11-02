@@ -13,10 +13,22 @@ in
 mkMerge [
   {
     # SOPS secrets for this user
-    sops = {
-      secrets."${secretKey}" = {
+    sops.secrets = {
+      "${secretKey}" = {
         sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
         neededForUsers = true;
+      };
+      "ssh/id_ed25519/private" = {
+        sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
+        path = "/home/${userName}/.ssh/id_ed25519";
+        mode = "0600";
+        owner = userName;
+      };
+      "ssh/id_ed25519/public" = {
+        sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
+        path = "/home/${userName}/.ssh/id_ed25519.pub";
+        mode = "0644";
+        owner = userName;
       };
     };
 
@@ -60,7 +72,19 @@ mkMerge [
         };
 
         # Development tools
-        development.direnv.enable = true;
+        development = {
+          direnv.enable = true;
+          git = {
+            enable = true;
+            userName = "MaxBullett";
+            userEmail = "31956266+MaxBullett@users.noreply.github.com";
+            signing = {
+              enable = true;
+              key = "~/.ssh/id_ed25519.pub";
+            };
+          };
+          github-cli.enable = true;
+        };
 
         # CLI tools
         tools.yazi.enable = true;
@@ -120,9 +144,6 @@ mkMerge [
         ];
         stateVersion = "25.05";
       };
-
-      # Git configuration
-      programs.git.enable = true;
     };
   }
 
@@ -132,6 +153,7 @@ mkMerge [
       "/persist".users.${userName} = {
         directories = [
           "code"
+          ".ssh"
         ];
         files = [ ];
       };
