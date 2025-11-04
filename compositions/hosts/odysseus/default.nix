@@ -18,6 +18,7 @@ in
       neededForUsers = true;
     };
     "cachix-token" = { };
+    "ca-certs/daadev" = { };
   };
 
   networking.hostName = hostName;
@@ -69,9 +70,15 @@ in
         };
       };
     };
-    security.sops = {
-      enable = true;
-      sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+    security = {
+      sops = {
+        enable = true;
+        sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+      };
+      pki = {
+        enable = true;
+        certificatePaths = [ config.sops.secrets."ca-certs/daadev".path ];
+      };
     };
     boot = {
       plymouth.enable = true;
