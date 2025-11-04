@@ -28,11 +28,5 @@
     extraModulePackages = [ ];
   };
 
-  zramSwap = {
-    enable = true;
-    memoryPercent = 10;
-    priority = 100;
-  };
-
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

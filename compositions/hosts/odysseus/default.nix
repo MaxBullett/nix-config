@@ -38,13 +38,18 @@ in
   };
 
   domains = {
-    system.localization = {
-      timeZone = "Europe/Berlin";
-      defaultLocale = "en_IE.UTF-8";
-      extraLocaleSettings = {
-        LC_TIME = "en_DK.UTF-8";
+    system = {
+      localization = {
+        timeZone = "Europe/Berlin";
+        defaultLocale = "en_IE.UTF-8";
+        extraLocaleSettings = {
+          LC_TIME = "en_DK.UTF-8";
+        };
+        keyboardLayout = "us";
       };
-      keyboardLayout = "us";
+      time-sync.enable = true;
+      zram.enable = true; # 10% of RAM for compressed swap
+      journald.enable = true; # Limit journal to 1G
     };
     nix = {
       daemon = {
@@ -114,7 +119,6 @@ in
                 mode = "0700";
               }
               "/var/lib/systemd"
-              "/var/log"
             ];
             files = [
               {
