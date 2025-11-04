@@ -153,7 +153,6 @@ mkMerge [
       "/persist".users.${userName} = {
         directories = [
           "code"
-          ".ssh"
         ];
         files = [ ];
       };

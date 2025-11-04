@@ -83,6 +83,10 @@ in
         enable = true;
         allowPowerCommands = true;
       };
+      ssh = {
+        enable = true;
+        multiplexing.enable = true; # Speed up home lab connections
+      };
     };
     boot = {
       plymouth.enable = true;
