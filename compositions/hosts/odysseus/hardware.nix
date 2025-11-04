@@ -29,4 +29,10 @@
   };
 
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
+  # Sleep: GA402RK uses s2idle; don't force "deep" sleep mode
+  systemd.sleep.extraConfig = ''
+    SuspendState=mem
+    SuspendMode=
+  '';
 }
