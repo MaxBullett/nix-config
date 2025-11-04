@@ -298,41 +298,83 @@ config = mkIf cfg.enable {
 
 **Important:** Check actual NixOS config values, not other domain options, to avoid coupling.
 
-### Conditional Persistence
+### One-Way Dependencies
 
-Domains are responsible for declaring their own persistence needs when using ephemeral root. This is a **one-way dependency** on the preservation platform, not cross-domain coupling.
+Domains may read state from other domains to make conditional decisions. This is a **one-way dependency** pattern, not cross-domain coupling, as long as the domain is only reading and reacting, not modifying.
 
-**Rationale:** Each domain knows what data it needs to persist. Declaring this in the domain:
-- Maintains bounded contexts (domain owns its data requirements)
-- Zero boilerplate for users (automatic persistence)
-- Self-documenting (persistence declared alongside the feature)
-- Graceful degradation (works even if preservation disabled)
-
-**Pattern:**
+**Acceptable Pattern:**
 ```nix
-config = mkIf cfg.enable {
-  # Domain's normal configuration
-  networking.networkmanager.enable = true;
+let
+  # Reading another domain's state
+  otherFeatureEnabled = config.domains.category.feature.enable or false;
+in
+{
+  config = mkIf cfg.enable {
+    # React to state, but don't modify it
+    services.myservice.option = if otherFeatureEnabled then "optimized" else "default";
+  };
+}
+```
 
-  # Conditional persistence (only if ephemeral root enabled)
-  domains.storage.btrfs.preservation.mounts."/persist".directories =
-    mkIf config.domains.storage.btrfs.preservation.enable [
-      "/etc/NetworkManager/system-connections"
-      "/var/lib/NetworkManager"
-    ];
-};
+**Rationale:**
+- Domains can observe system state to auto-configure
+- Enables zero-configuration optimizations
+- Maintains bounded contexts (no bidirectional coupling)
+- Gracefully degrades when dependencies are disabled
+
+**Common Examples:**
+
+1. **Auto-detection for optimization:**
+```nix
+# domains/development/docker.nix
+let
+  usingBtrfs = config.domains.storage.btrfs.enable or false;
+in
+{
+  config = mkIf cfg.enable {
+    virtualisation.docker.storageDriver = mkIf usingBtrfs "btrfs";
+  };
+}
+```
+
+2. **Conditional persistence (most common):**
+```nix
+let
+  preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
+in
+{
+  config = mkIf cfg.enable {
+    # Domain's normal configuration
+    networking.networkmanager.enable = true;
+
+    # Conditional persistence (only if ephemeral root enabled)
+    domains.storage.btrfs.preservation.mounts."/persist".directories =
+      mkIf preservationEnabled [
+        "/etc/NetworkManager/system-connections"
+        "/var/lib/NetworkManager"
+      ];
+  };
+}
 ```
 
 **Why this doesn't violate "No Cross-Domain Coupling":**
 
-This is analogous to using NixOS platform options like `networking.*` or `services.*`. Domains are:
-- **Not modifying another domain's behavior** (preservation's logic is unchanged)
-- **Contributing to a shared platform interface** (preservation provides options for this purpose)
+This pattern is analogous to using NixOS platform options like `config.services.pipewire.enable` or `config.networking.hostName`. Domains are:
+- **Not modifying another domain's behavior** (one-way read-only)
+- **Contributing to platform interfaces** (preservation provides options for this purpose)
 - **Following a one-way dependency** (domain → platform, not bidirectional)
+- **Using the `or false` safety pattern** (graceful when dependency missing)
 
-The preservation domain provides options specifically designed for domains to contribute to, similar to how NixOS provides `environment.systemPackages` for packages or `users.users` for user definitions.
+**Forbidden (bidirectional coupling):**
+```nix
+# ❌ NEVER do this - modifying another domain
+config = mkIf cfg.enable {
+  domains.other.feature.enable = true;  # FORBIDDEN
+  domains.other.feature.setting = "value";  # FORBIDDEN
+};
+```
 
-**When preservation is disabled:** The paths simply don't get added (NixOS module system handles the merge), and the system works normally with persistent root.
+**Key Principle:** Reading state is acceptable; modifying state creates coupling.
 
 ## Anti-Patterns (Forbidden)
 
