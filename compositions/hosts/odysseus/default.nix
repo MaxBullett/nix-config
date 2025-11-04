@@ -79,6 +79,10 @@ in
         enable = true;
         certificatePaths = [ config.sops.secrets."ca-certs/daadev".path ];
       };
+      doas = {
+        enable = true;
+        allowPowerCommands = true;
+      };
     };
     boot = {
       plymouth.enable = true;
