@@ -87,6 +87,7 @@ in
         enable = true;
         multiplexing.enable = true; # Speed up home lab connections
       };
+      gnome-keyring.enable = true;
     };
     boot = {
       plymouth.enable = true;
