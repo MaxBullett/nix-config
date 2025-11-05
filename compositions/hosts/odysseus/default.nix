@@ -119,6 +119,7 @@ in
             neededForBoot = true;
             directories = [
               "/etc/ssh"
+              "/etc/asusd"
               {
                 directory = "/var/lib/nixos";
                 inInitrd = true;
@@ -155,10 +156,13 @@ in
         };
       };
     };
-    networking.networkmanager = {
-      enable = true;
-      wifi.backend = "iwd";
-      networks = [ "acheron" ];
+    networking = {
+      networkmanager = {
+        enable = true;
+        wifi.backend = "iwd";
+        networks = [ "acheron" ];
+      };
+      avahi.enable = true;
     };
     hardware = {
       power-profiles-daemon.enable = true;
@@ -168,7 +172,7 @@ in
     peripherals.bluetooth = {
       enable = true;
       settings = {
-        General.Experimental = true; # Enable LE Audio/LC3
+        General.Experimental = true;
       };
     };
     audio.pipewire.enable = true;
