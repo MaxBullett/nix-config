@@ -16,6 +16,7 @@ in
 {
   imports = [
     ./preservation.nix
+    ./snapshots.nix
   ];
 
   options.domains.storage.btrfs = {

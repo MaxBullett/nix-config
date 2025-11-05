@@ -19,6 +19,15 @@ in
     };
     "cachix-token" = { };
     "ca-certs/daadev" = { };
+    "restic" = {
+      mode = "0400";
+    };
+    "b2/keyID" = {
+      mode = "0400";
+    };
+    "b2/applicationKey" = {
+      mode = "0400";
+    };
   };
 
   networking.hostName = hostName;
@@ -48,8 +57,8 @@ in
         keyboardLayout = "us";
       };
       time-sync.enable = true;
-      zram.enable = true; # 10% of RAM for compressed swap
-      journald.enable = true; # Limit journal to 1G
+      zram.enable = true;
+      journald.enable = true;
     };
     nix = {
       daemon = {
@@ -90,7 +99,7 @@ in
       };
       ssh = {
         enable = true;
-        multiplexing.enable = true; # Speed up home lab connections
+        multiplexing.enable = true;
       };
       gnome-keyring.enable = true;
     };
@@ -131,6 +140,18 @@ in
           "/preserve" = {
             neededForBoot = true;
           };
+        };
+      };
+      snapshots = {
+        enable = true;
+        subvolume = "/preserve";
+        snapshotPath = "/.snapshots/preserve";
+        remote = {
+          enable = true;
+          repository = "b2:odysseus-backup:/snapshots";
+          passwordFile = config.sops.secrets."restic".path;
+          b2KeyId = config.sops.secrets."b2/keyID".path;
+          b2ApplicationKey = config.sops.secrets."b2/applicationKey".path;
         };
       };
     };
