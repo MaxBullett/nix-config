@@ -185,9 +185,8 @@ in
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/preserve" = {
         users = mapAttrs (username: _: {
-          files = [
-            # Git config is generated, but preserve any local changes
-            ".gitconfig"
+          directories = [
+            ".config/git"
           ];
         }) enabledUsers;
       };
