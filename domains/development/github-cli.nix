@@ -64,9 +64,8 @@ in
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/preserve" = {
         users = mapAttrs (username: _: {
-          files = [
-            # GitHub CLI config and authentication
-            ".config/gh/hosts.yml"
+          directories = [
+            ".config/gh"
           ];
         }) enabledUsers;
       };
