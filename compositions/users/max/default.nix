@@ -84,6 +84,7 @@ mkMerge [
             };
           };
           github-cli.enable = true;
+          claude-code.enable = true;
         };
 
         # CLI tools
