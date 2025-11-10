@@ -5,12 +5,20 @@
 }:
 let
   inherit (lib)
+    filterAttrs
+    mapAttrs
     mkEnableOption
     mkIf
+    mkMerge
     mkOption
     types
     ;
   cfg = config.domains.desktop.cosmic;
+
+  # Find all normal users (COSMIC is system-wide, persistence is per-user)
+  normalUsers = filterAttrs (_: user: user.isNormalUser or false) config.users.users;
+
+  preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
 in
 {
   options.domains.desktop.cosmic = {
@@ -47,32 +55,50 @@ in
     };
   };
 
-  config = mkIf cfg.enable {
-    assertions = [
-      {
-        assertion =
-          !(cfg.enable && cfg.autoLogin.enable) || (cfg.autoLogin.user != null && cfg.autoLogin.user != "");
-        message = "domains.desktop.cosmic.autoLogin.user must be set when autoLogin.enable = true.";
-      }
-    ];
+  config = mkMerge [
+    (mkIf cfg.enable {
+      assertions = [
+        {
+          assertion =
+            !(cfg.enable && cfg.autoLogin.enable) || (cfg.autoLogin.user != null && cfg.autoLogin.user != "");
+          message = "domains.desktop.cosmic.autoLogin.user must be set when autoLogin.enable = true.";
+        }
+      ];
 
-    services.displayManager = {
-      cosmic-greeter.enable = cfg.greeter.enable;
-      autoLogin = mkIf cfg.autoLogin.enable {
-        enable = true;
-        inherit (cfg.autoLogin) user;
+      services.displayManager = {
+        cosmic-greeter.enable = cfg.greeter.enable;
+        autoLogin = mkIf cfg.autoLogin.enable {
+          enable = true;
+          inherit (cfg.autoLogin) user;
+        };
       };
-    };
 
-    services.desktopManager.cosmic = {
-      enable = true;
-      inherit (cfg) xwayland;
-    };
+      services.desktopManager.cosmic = {
+        enable = true;
+        inherit (cfg) xwayland;
+      };
 
-    # Fix clipboard issues in COSMIC
-    environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
+      # Fix clipboard issues in COSMIC
+      environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
 
-    # Required for desktop privilege operations (mounting, power management, etc.)
-    security.polkit.enable = true;
-  };
+      # Required for desktop privilege operations (mounting, power management, etc.)
+      security.polkit.enable = true;
+    })
+
+    # Conditional persistence for all normal users
+    (mkIf (cfg.enable && preservationEnabled) {
+      domains.storage.btrfs.preservation.mounts."/persist" = {
+        users = mapAttrs (username: _: {
+          directories = [
+            # COSMIC desktop settings and state
+            ".config/cosmic"
+            ".local/state/cosmic"
+            ".local/state/cosmic-comp"
+            # Pop Launcher (app launcher) history and preferences
+            ".local/state/pop-launcher"
+          ];
+        }) normalUsers;
+      };
+    })
+  ];
 }
