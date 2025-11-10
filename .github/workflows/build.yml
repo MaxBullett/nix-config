@@ -28,5 +28,6 @@ jobs:
       - name: Build ${{ matrix.host }}
         run: |
           nix build .#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel \
+            --override-input nix-secrets "path:$PWD/.github/nix-secrets-stub" \
             --print-build-logs \
             --show-trace

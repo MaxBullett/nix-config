@@ -2,6 +2,12 @@
 
 This directory contains CI/CD workflows for the nix-config repository.
 
+## Secrets Handling in CI
+
+All workflows use `--override-input nix-secrets` to replace the private secrets repository with stub files from `.github/nix-secrets-stub/`. This allows CI builds to succeed without access to the private `nix-secrets` repository.
+
+**Important:** Real deployments still use the actual private secrets repository. The stub is only used for CI validation.
+
 ## Workflows
 
 ### 1. Build Check (`build.yml`)

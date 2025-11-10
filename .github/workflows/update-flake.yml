@@ -26,7 +26,9 @@ jobs:
 
       - name: Test build after update
         run: |
-          nix flake check --print-build-logs
+          nix flake check \
+            --override-input nix-secrets "path:$PWD/.github/nix-secrets-stub" \
+            --print-build-logs
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7

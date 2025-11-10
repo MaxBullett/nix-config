@@ -22,4 +22,7 @@ jobs:
 
       - name: Run flake check
         run: |
-          nix flake check --print-build-logs --show-trace
+          nix flake check \
+            --override-input nix-secrets "path:$PWD/.github/nix-secrets-stub" \
+            --print-build-logs \
+            --show-trace
