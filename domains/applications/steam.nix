@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
@@ -111,17 +110,14 @@ in
     # System-level configuration when any user has Steam enabled
     (mkIf anyEnabled {
       # Enable Steam with hardware acceleration and 32-bit support
-      programs.steam = {
-        enable = true;
-        remotePlay.openFirewall = cfg.remotePlay.openFirewall or false;
-        dedicatedServer.openFirewall = cfg.dedicatedServer.openFirewall or false;
-
-        # Include extra compatibility packages
-        extraCompatPackages = cfg.extraCompatPackages;
+      programs = {
+        steam = {
+          enable = true;
+          inherit (cfg) remotePlay dedicatedServer extraCompatPackages;
+        };
+        # Enable GameMode for performance optimization
+        inherit (cfg) gamemode;
       };
-
-      # Enable GameMode for performance optimization
-      programs.gamemode.enable = mkIf (cfg.gamemode.enable or true) true;
 
       # Ensure graphics drivers and 32-bit support
       hardware.graphics = {
