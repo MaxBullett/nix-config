@@ -87,9 +87,7 @@ in
       domains.storage.btrfs.preservation.mounts."/preserve" = {
         users = mapAttrs (username: _: {
           directories = [
-            # Firefox profile data preserved across reboots
-            # Includes Mozilla account login and synced settings
-            ".mozilla/firefox"
+            ".mozilla"
           ];
         }) enabledUsers;
       };
