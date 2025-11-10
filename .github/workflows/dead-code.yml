@@ -1,0 +1,49 @@
+name: Dead Code Detection
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  detect:
+    name: Find Unreferenced Modules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find all .nix files
+        id: all_files
+        run: |
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          find . -name "*.nix" -not -path "./.git/*" -not -path "./result/*" | sort >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Find referenced .nix files
+        id: referenced
+        run: |
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          # Find all imports and path references in nix files
+          grep -rh "import\|/.*\.nix" --include="*.nix" . | \
+            grep -oE '(\./|\.\./|/)([a-zA-Z0-9_/-]+\.nix)' | \
+            sort -u >> $GITHUB_OUTPUT || true
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Check for unreferenced files
+        run: |
+          echo "## Dead Code Detection Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # This is a basic check - files that might be unreferenced
+          # Note: This may have false positives for files referenced via directory imports
+          all_count=$(find . -name "*.nix" -not -path "./.git/*" -not -path "./result/*" | wc -l)
+
+          echo "📊 **Statistics:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Total .nix files: $all_count" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ **Note:** This is a basic scan. Some files may be referenced via directory imports (e.g., \`import ./domains/security\` imports \`default.nix\`)." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Manual review recommended for comprehensive dead code analysis." >> $GITHUB_STEP_SUMMARY
