@@ -132,7 +132,13 @@ mkMerge [
         };
 
         # Applications
-        applications.firefox.enable = true;
+        applications = {
+          firefox.enable = true;
+          steam = {
+            enable = true;
+            extraCompatPackages = with pkgs; [ proton-ge-bin ];
+          };
+        };
       };
 
       # Home configuration
