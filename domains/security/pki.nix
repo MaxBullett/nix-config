@@ -64,17 +64,15 @@ in
         CERT_DIR="/etc/pki/trust/source/anchors"
         mkdir -p "$CERT_DIR"
 
-        ${concatMapStringsSep "\n" (
-          certPath: ''
-            if [ -f "${certPath}" ]; then
-              CERT_NAME="$(basename "${certPath}")"
-              cp -f "${certPath}" "$CERT_DIR/$CERT_NAME"
-              echo "Installed certificate: $CERT_NAME"
-            else
-              echo "Warning: Certificate file not found: ${certPath}" >&2
-            fi
-          ''
-        ) cfg.certificatePaths}
+        ${concatMapStringsSep "\n" (certPath: ''
+          if [ -f "${certPath}" ]; then
+            CERT_NAME="$(basename "${certPath}")"
+            cp -f "${certPath}" "$CERT_DIR/$CERT_NAME"
+            echo "Installed certificate: $CERT_NAME"
+          else
+            echo "Warning: Certificate file not found: ${certPath}" >&2
+          fi
+        '') cfg.certificatePaths}
 
         # Rebuild system trust store with new certificates
         ${pkgs.p11-kit}/bin/trust extract-compat
