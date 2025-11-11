@@ -16,14 +16,12 @@ let
     types
     ;
 
-  # Collect all users with starship enabled
   enabledUsers = filterAttrs (
     _: userCfg: userCfg.domains.shell.starship.enable or false
   ) config.home-manager.users;
 
   anyEnabled = enabledUsers != { };
 
-  # Home-manager module that provides per-user options
   starshipHomeModule =
     {
       config,
@@ -41,10 +39,8 @@ let
           default = { };
           description = ''
             Configuration options for starship prompt.
-
             This uses starship's native default configuration.
             See <https://starship.rs/config/> for available options.
-
             Example:
               {
                 add_newline = true;
@@ -113,18 +109,14 @@ let
 in
 {
   config = mkMerge [
-    # Inject the starship home-manager module into all users
     {
       home-manager.sharedModules = [ starshipHomeModule ];
     }
 
-    # System-level configuration when any user has starship enabled
     (mkIf anyEnabled {
-      # Ensure starship is available system-wide
       environment.systemPackages = [ pkgs.starship ];
     })
 
-    # Conditional persistence for all enabled users
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/persist" = {
         users = mapAttrs (username: _: {

@@ -15,14 +15,12 @@ let
     types
     ;
 
-  # Collect all users with yazi enabled
   enabledUsers = filterAttrs (
     _: userCfg: userCfg.domains.tools.yazi.enable or false
   ) config.home-manager.users;
 
   anyEnabled = enabledUsers != { };
 
-  # Home-manager module that provides per-user options
   yaziHomeModule =
     {
       config,
@@ -60,18 +58,14 @@ let
 in
 {
   config = mkMerge [
-    # Inject the yazi home-manager module into all users
     {
       home-manager.sharedModules = [ yaziHomeModule ];
     }
 
-    # System-level configuration when any user has yazi enabled
     (mkIf anyEnabled {
-      # Ensure yazi is available system-wide
       environment.systemPackages = [ pkgs.yazi ];
     })
 
-    # Conditional persistence for all enabled users
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/persist" = {
         users = mapAttrs (username: _: {

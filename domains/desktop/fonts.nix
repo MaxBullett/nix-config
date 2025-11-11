@@ -6,6 +6,7 @@
 }:
 let
   inherit (lib) mkEnableOption mkIf;
+
   cfg = config.domains.desktop.fonts;
 in
 {
@@ -15,7 +16,6 @@ in
 
   config = mkIf cfg.enable {
     fonts = {
-      # Enable fontconfig for font management
       fontconfig.enable = true;
 
       packages = with pkgs; [
@@ -38,7 +38,6 @@ in
         material-design-icons
       ];
 
-      # Default fonts configuration
       fontconfig.defaultFonts = {
         monospace = [
           "JetBrainsMono Nerd Font"

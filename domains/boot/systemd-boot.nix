@@ -49,9 +49,14 @@ in
           enable = mkDefault true;
           inherit (cfg) configurationLimit editor;
         };
+
         inherit (cfg) timeout;
-        efi = { inherit (cfg) canTouchEfiVariables; };
+
+        efi = {
+          inherit (cfg) canTouchEfiVariables;
+        };
       };
+
       initrd.systemd.enable = mkDefault true;
     };
   };

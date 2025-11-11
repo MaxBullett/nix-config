@@ -10,6 +10,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.system.time-sync;
 in
 {
@@ -24,7 +25,6 @@ in
       ];
       description = ''
         NTP servers to use for time synchronization.
-
         Default includes Cloudflare's fast NTP service and the public NTP pool.
       '';
       example = [

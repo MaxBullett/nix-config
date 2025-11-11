@@ -24,7 +24,7 @@ in
   options.domains.desktop.cosmic = {
     enable = mkEnableOption "COSMIC desktop environment";
 
-    greeter = {
+    cosmic-greeter = {
       enable = mkOption {
         type = types.bool;
         default = true;
@@ -66,7 +66,8 @@ in
       ];
 
       services.displayManager = {
-        cosmic-greeter.enable = cfg.greeter.enable;
+        inherit (cfg) cosmic-greeter;
+
         autoLogin = mkIf cfg.autoLogin.enable {
           enable = true;
           inherit (cfg.autoLogin) user;
@@ -90,10 +91,15 @@ in
       domains.storage.btrfs.preservation.mounts."/persist" = {
         users = mapAttrs (username: _: {
           directories = [
+            # COSMIC desktop settings and state
             ".config/cosmic"
-            ".config/cosmic-initial-setup-done"
             ".local/state/cosmic"
             ".local/state/cosmic-comp"
+
+            # Initial setup flag
+            ".config/cosmic-initial-setup-done"
+
+            # Pop Launcher (app launcher) history and preferences
             ".local/state/pop-launcher"
           ];
         }) normalUsers;

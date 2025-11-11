@@ -9,6 +9,7 @@ let
     mkIf
     mkMerge
     ;
+
   cfg = config.domains.hardware.power-profiles-daemon;
 
   preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
@@ -23,11 +24,10 @@ in
       services.power-profiles-daemon.enable = true;
     })
 
-    # System-level persistence for power profile selection
     (mkIf (cfg.enable && preservationEnabled) {
       domains.storage.btrfs.preservation.mounts."/persist" = {
         directories = [
-          # Persists selected power profile (performance/balanced/power-saver)
+          # Selected power profile (performance/balanced/power-saver)
           "/var/lib/power-profiles-daemon"
         ];
       };

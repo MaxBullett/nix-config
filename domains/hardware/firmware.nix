@@ -5,6 +5,7 @@
 }:
 let
   inherit (lib) mkEnableOption mkIf;
+
   cfg = config.domains.hardware.firmware;
 in
 {

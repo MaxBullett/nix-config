@@ -5,6 +5,7 @@
 }:
 let
   inherit (lib) mkOption types;
+
   cfg = config.domains.system.localization;
 in
 {
@@ -38,15 +39,12 @@ in
   };
 
   config = {
-    # Time zone
     time.timeZone = cfg.timeZone;
 
-    # Locale settings
     i18n = {
       inherit (cfg) defaultLocale extraLocaleSettings;
     };
 
-    # Console keyboard layout
     console.keyMap = cfg.keyboardLayout;
   };
 }

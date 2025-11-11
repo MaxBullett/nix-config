@@ -55,7 +55,6 @@ in
       }
     ];
 
-    # Enable nh program
     programs.nh = {
       enable = true;
 

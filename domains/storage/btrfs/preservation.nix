@@ -146,7 +146,6 @@ in
       }
     ];
 
-    # Configure preservation
     preservation = {
       enable = mkDefault true;
       preserveAt = preserveAtBlueprints;
@@ -154,7 +153,7 @@ in
 
     fileSystems = fileSystemDefinitions;
 
-    # Configure root purge service
+    # Root purge service
     boot.initrd.systemd = {
       inherit (cfg) emergencyAccess;
 

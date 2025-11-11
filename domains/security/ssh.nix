@@ -12,11 +12,11 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.security.ssh;
 
   preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
 
-  # Find all normal (non-system) users for SSH persistence
   normalUsers = filterAttrs (_: user: user.isNormalUser or false) config.users.users;
 in
 {
@@ -28,7 +28,6 @@ in
       default = false;
       description = ''
         Forward SSH agent to remote hosts.
-
         When false (default), more secure - agent stays local.
         Enable per-host in matchBlocks for specific trusted servers.
       '';
@@ -39,7 +38,6 @@ in
       default = false;
       description = ''
         Hash host names and addresses in known_hosts file.
-
         Improves privacy by obscuring which hosts you connect to.
       '';
     };
@@ -50,7 +48,6 @@ in
         default = true;
         description = ''
           Send periodic keepalive messages to maintain connections.
-
           Prevents SSH sessions from timing out during idle periods.
           Essential for long-running sessions.
         '';
@@ -61,7 +58,6 @@ in
         default = 60;
         description = ''
           Interval in seconds between keepalive messages.
-
           Default: 60 seconds
         '';
       };
@@ -71,7 +67,6 @@ in
         default = 3;
         description = ''
           Number of keepalive messages sent without response before disconnecting.
-
           Default: 3 (disconnect after ~3 minutes of no response)
         '';
       };
@@ -83,7 +78,6 @@ in
         default = false;
         description = ''
           Enable connection multiplexing for better performance.
-
           Reuses existing SSH connections for subsequent sessions to the same host.
           Significantly speeds up repeated connections (e.g., git operations, multiple terminals).
         '';
@@ -94,7 +88,6 @@ in
         default = "/tmp/ssh-%r@%h:%p";
         description = ''
           Path for control socket files.
-
           Variables: %r (remote user), %h (host), %p (port)
         '';
       };
@@ -104,7 +97,6 @@ in
         default = "10m";
         description = ''
           How long to keep master connection alive after last session closes.
-
           Examples: "10m" (10 minutes), "1h" (1 hour), "yes" (forever)
         '';
       };
@@ -115,7 +107,6 @@ in
       default = "";
       description = ''
         Additional SSH client configuration.
-
         Will be appended to ~/.ssh/config (or system-wide config).
       '';
       example = ''
@@ -128,7 +119,6 @@ in
 
   config = mkIf cfg.enable {
     programs.ssh = {
-      # System-wide SSH client configuration via extraConfig
       extraConfig = ''
         ${lib.optionalString (!cfg.forwardAgent) ''
           # Disable agent forwarding by default (security)
@@ -162,7 +152,6 @@ in
       '';
     };
 
-    # Conditional persistence: SSH keys and known_hosts for all normal users
     domains.storage.btrfs.preservation.mounts = mkIf preservationEnabled {
       "/persist".users = mapAttrs (username: _: {
         directories = [ ".ssh" ];

@@ -12,6 +12,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.security.pki;
 in
 {
@@ -23,7 +24,6 @@ in
       default = [ ];
       description = ''
         Paths to CA certificate files to trust system-wide.
-
         These paths are evaluated at runtime, making them suitable for
         SOPS secrets or other dynamically-provisioned certificate sources.
         Certificates will be added to the system trust store and trusted by
@@ -43,7 +43,6 @@ in
       }
     ];
 
-    # Install custom CA certificates at runtime (supports SOPS secrets)
     systemd.services.install-custom-ca-certs = {
       description = "Install custom CA certificates to system trust store";
       wantedBy = [ "multi-user.target" ];

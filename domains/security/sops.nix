@@ -11,6 +11,7 @@ let
     mkIf
     types
     ;
+
   cfg = config.domains.security.sops;
 in
 {

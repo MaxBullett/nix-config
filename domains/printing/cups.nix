@@ -12,6 +12,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.printing.cups;
 in
 {
@@ -29,7 +30,6 @@ in
   };
 
   config = mkIf cfg.enable (mkMerge [
-    # Base CUPS configuration
     {
       services.printing = {
         enable = true;
@@ -37,7 +37,6 @@ in
       };
     }
 
-    # Conditional persistence
     (mkIf config.domains.storage.btrfs.preservation.enable {
       domains.storage.btrfs.preservation.mounts."/persist".directories = [
         "/var/lib/cups"

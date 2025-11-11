@@ -10,7 +10,9 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.networking.avahi;
+
   preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
 in
 {
@@ -43,7 +45,6 @@ in
       inherit (cfg) openFirewall;
     };
 
-    # Conditional persistence: Avahi service state
     domains.storage.btrfs.preservation.mounts."/persist".directories = mkIf preservationEnabled [
       "/var/lib/avahi-daemon"
     ];

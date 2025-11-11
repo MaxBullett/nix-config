@@ -18,6 +18,7 @@ let
     optionalString
     types
     ;
+
   cfg = config.domains.networking.networkmanager;
 in
 {
@@ -46,7 +47,6 @@ in
       default = [ ];
       description = ''
         List of network names to configure from SOPS secrets.
-
         Each network should have entries in your secrets file:
         ```yaml
         networks:
@@ -55,9 +55,7 @@ in
             psk: "wifi-password"
             hidden: true  # optional, for hidden SSIDs
         ```
-
         Then use: `networks = [ "network-name" ];`
-
         Note: These are managed declaratively. Manual changes via NetworkManager
         GUI will be overwritten on next rebuild. To modify a network, update
         the secret in nix-secrets and rebuild.
@@ -70,7 +68,6 @@ in
   };
 
   config = mkIf cfg.enable (mkMerge [
-    # Base NetworkManager configuration
     {
       networking.networkmanager = {
         enable = true;
@@ -78,7 +75,6 @@ in
       };
     }
 
-    # iwd backend configuration
     (mkIf (cfg.wifi.backend == "iwd") {
       networking.wireless.iwd = {
         enable = true;
@@ -90,7 +86,6 @@ in
       };
     })
 
-    # Conditional persistence
     (mkIf config.domains.storage.btrfs.preservation.enable {
       domains.storage.btrfs.preservation.mounts."/persist".directories = [
         "/etc/NetworkManager/system-connections"
@@ -99,7 +94,6 @@ in
       ++ lib.optionals (cfg.wifi.backend == "iwd") [ "/var/lib/iwd" ];
     })
 
-    # Secret network configuration via SOPS templates
     (mkIf (cfg.networks != [ ]) {
       # Declare SOPS secrets for each network field (ssid, psk, hidden)
       sops.secrets = listToAttrs (

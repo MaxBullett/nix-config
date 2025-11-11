@@ -14,14 +14,12 @@ let
     types
     ;
 
-  # Collect all enabled users and their XDG configs
   enabledUsers = filterAttrs (
     _: userCfg: userCfg.domains.desktop.xdg.enable or false
   ) config.home-manager.users;
 
   anyEnabled = enabledUsers != { };
 
-  # Submodule type for XDG directory configuration
   xdgDirType = types.nullOr (
     types.submodule {
       options = {
@@ -168,7 +166,6 @@ in
       home-manager.sharedModules = [ xdgHomeModule ];
     }
 
-    # Conditional persistence - only if preservation is enabled
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts =
         let

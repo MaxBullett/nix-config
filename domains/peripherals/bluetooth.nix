@@ -11,6 +11,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.peripherals.bluetooth;
 in
 {
@@ -34,7 +35,6 @@ in
   };
 
   config = mkIf cfg.enable (mkMerge [
-    # Base Bluetooth configuration
     {
       hardware.bluetooth = {
         enable = true;
@@ -42,7 +42,6 @@ in
       };
     }
 
-    # Conditional persistence
     (mkIf config.domains.storage.btrfs.preservation.enable {
       domains.storage.btrfs.preservation.mounts."/persist".directories = [
         "/var/lib/bluetooth"

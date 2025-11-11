@@ -14,14 +14,12 @@ let
     types
     ;
 
-  # Collect all users with Steam enabled
   enabledUsers = filterAttrs (
     _: userCfg: userCfg.domains.applications.steam.enable or false
   ) config.home-manager.users;
 
   anyEnabled = enabledUsers != { };
 
-  # Home-manager module that provides per-user options
   steamHomeModule =
     { config, ... }:
     let
@@ -37,8 +35,7 @@ let
           example = lib.literalExpression "[ pkgs.proton-ge-bin ]";
           description = ''
             Additional compatibility tool packages (e.g., Proton GE).
-
-            These will be available in Steam's compatibility tools list.
+            These are available in Steam's compatibility tools list.
           '';
         };
       };
@@ -59,7 +56,6 @@ in
         default = false;
         description = ''
           Open firewall ports for Steam Remote Play.
-
           Allows streaming games from this machine to other devices.
         '';
       };
@@ -71,7 +67,6 @@ in
         default = false;
         description = ''
           Open firewall ports for Source Dedicated Server.
-
           Required for hosting game servers (TF2, CS:GO, etc.).
         '';
       };
@@ -83,7 +78,6 @@ in
         default = true;
         description = ''
           Enable Feral Interactive's GameMode for performance optimization.
-
           GameMode temporarily applies optimizations when games are running.
         '';
       };
@@ -95,38 +89,36 @@ in
       example = lib.literalExpression "[ pkgs.proton-ge-bin ]";
       description = ''
         System-wide additional compatibility tool packages (e.g., Proton GE).
-
         These will be available in Steam's compatibility tools list for all users.
       '';
     };
   };
 
   config = mkMerge [
-    # Inject the Steam home-manager module into all users
     {
       home-manager.sharedModules = [ steamHomeModule ];
     }
 
-    # System-level configuration when any user has Steam enabled
     (mkIf anyEnabled {
-      # Enable Steam with hardware acceleration and 32-bit support
       programs = {
         steam = {
           enable = true;
-          inherit (cfg) remotePlay dedicatedServer extraCompatPackages;
+          inherit (cfg)
+            dedicatedServer
+            extraCompatPackages
+            remotePlay
+            ;
         };
-        # Enable GameMode for performance optimization
+
         inherit (cfg) gamemode;
       };
 
-      # Ensure graphics drivers and 32-bit support
       hardware.graphics = {
         enable = true;
         enable32Bit = true;
       };
     })
 
-    # Conditional persistence for all enabled users
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/persist" = {
         users = mapAttrs (username: _: {

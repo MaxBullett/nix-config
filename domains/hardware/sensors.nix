@@ -6,6 +6,7 @@
 }:
 let
   inherit (lib) mkEnableOption mkIf;
+
   cfg = config.domains.hardware.sensors;
 in
 {
@@ -14,7 +15,6 @@ in
   };
 
   config = mkIf cfg.enable {
-    # Provide sensors command for monitoring temps, fans, voltages
     environment.systemPackages = [ pkgs.lm_sensors ];
   };
 }

@@ -11,6 +11,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.storage.btrfs;
 in
 {

@@ -5,6 +5,7 @@
 }:
 let
   inherit (lib) mkOption types;
+
   cfg = config.domains.nix.nixpkgs;
 in
 {

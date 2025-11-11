@@ -10,6 +10,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.system.journald;
 
   preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
@@ -32,7 +33,6 @@ in
         - volatile: Only in /run/log/journal (RAM, lost on reboot)
         - auto: Persistent if /var/log/journal exists, else volatile
         - none: Don't keep logs
-
         Default: "persistent" when preservation enabled, "auto" otherwise
       '';
     };
@@ -42,10 +42,8 @@ in
       default = "1G";
       description = ''
         Maximum disk space the journal can use.
-
         Prevents the journal from consuming too much space.
         Especially important for ephemeral root systems.
-
         Examples: "500M", "1G", "2G"
       '';
     };
@@ -55,9 +53,7 @@ in
       default = null;
       description = ''
         Delete logs older than this duration.
-
         Prevents old logs from accumulating in persistent storage.
-
         Examples: "1month", "2weeks", "7d"
       '';
       example = "1month";
@@ -68,9 +64,7 @@ in
       default = null;
       description = ''
         Maximum time to store entries in a single journal file before rotating.
-
         Helps with log organization and cleanup.
-
         Examples: "1week", "1day", "1month"
       '';
       example = "1week";
@@ -81,7 +75,6 @@ in
       default = "";
       description = ''
         Additional journald configuration.
-
         See journald.conf(5) for available options.
       '';
       example = ''
@@ -100,7 +93,6 @@ in
       ${cfg.extraConfig}
     '';
 
-    # Conditional persistence: /var/log when using persistent storage
     domains.storage.btrfs.preservation.mounts."/persist".directories = mkIf (
       preservationEnabled && cfg.storage == "persistent"
     ) [ "/var/log" ];

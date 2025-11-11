@@ -11,6 +11,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.storage.btrfs.snapshots;
 in
 {
@@ -159,15 +160,12 @@ in
       }
     ];
 
-    # Install btrbk
     environment.systemPackages = [ pkgs.btrbk ];
 
-    # Ensure snapshot directory exists
     systemd.tmpfiles.rules = [
       "d ${cfg.snapshotPath} 0755 root root -"
     ];
 
-    # btrbk configuration
     environment.etc."btrbk/btrbk.conf".text =
       let
         inherit (cfg.local) retention;
@@ -184,9 +182,7 @@ in
           subvolume .
       '';
 
-    # Systemd configuration for btrbk and restic
     systemd = {
-      # Systemd service for btrbk
       services.btrbk-snapshot = {
         description = "Create btrfs snapshots with btrbk";
         serviceConfig = {
@@ -195,7 +191,6 @@ in
         };
       };
 
-      # Systemd timer for btrbk (runs daily at 01:00)
       timers.btrbk-snapshot = {
         description = "Daily btrfs snapshot timer";
         wantedBy = [ "timers.target" ];
@@ -205,28 +200,23 @@ in
         };
       };
 
-      # Ensure restic backup runs after btrbk snapshot
       services.restic-backups-preserve = mkIf cfg.remote.enable {
         after = [ "btrbk-snapshot.service" ];
         wants = [ "btrbk-snapshot.service" ];
       };
     };
 
-    # Restic remote backup configuration
     services.restic.backups = mkIf cfg.remote.enable {
       preserve = {
         inherit (cfg.remote) repository passwordFile;
 
-        # Backup from the latest snapshot
         paths = [ "${cfg.snapshotPath}" ];
 
-        # Run after btrbk creates snapshots
         timerConfig = {
           OnCalendar = cfg.remote.schedule;
           Persistent = true;
         };
 
-        # Prune old backups according to retention policy
         pruneOpts =
           let
             inherit (cfg.remote) retention;
@@ -238,13 +228,11 @@ in
             "--keep-yearly ${toString retention.yearly}"
           ];
 
-        # B2 credentials
         backupPrepareCommand = mkIf (cfg.remote.b2KeyId != null && cfg.remote.b2ApplicationKey != null) ''
           export B2_ACCOUNT_ID="$(cat ${cfg.remote.b2KeyId})"
           export B2_ACCOUNT_KEY="$(cat ${cfg.remote.b2ApplicationKey})"
         '';
 
-        # Additional options
         extraBackupArgs = [
           "--exclude-caches"
           "--one-file-system"

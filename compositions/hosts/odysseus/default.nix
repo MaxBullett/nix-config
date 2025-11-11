@@ -101,7 +101,10 @@ in
         enable = true;
         multiplexing.enable = true;
       };
-      gnome-keyring.enable = true;
+      gnome-keyring = {
+        enable = true;
+        gcr-ssh-agent = true;
+      };
     };
     boot = {
       plymouth.enable = true;
@@ -181,7 +184,7 @@ in
       fonts.enable = true;
       cosmic = {
         enable = true;
-        greeter.enable = true;
+        cosmic-greeter.enable = true;
       };
     };
     development.docker.enable = true;

@@ -15,14 +15,12 @@ let
     types
     ;
 
-  # Collect all users with Firefox enabled
   enabledUsers = filterAttrs (
     _: userCfg: userCfg.domains.applications.firefox.enable or false
   ) config.home-manager.users;
 
   anyEnabled = enabledUsers != { };
 
-  # Home-manager module that provides per-user options
   firefoxHomeModule =
     { config, ... }:
     let
@@ -37,7 +35,6 @@ let
           default = true;
           description = ''
             Enable hardware video acceleration (VA-API).
-
             Recommended for AMD/Intel GPUs for better video playback performance.
           '';
         };
@@ -47,7 +44,6 @@ let
         programs.firefox = {
           enable = true;
 
-          # Enable hardware acceleration for AMD GPU
           profiles.default = mkIf cfg.enableHardwareAcceleration {
             id = 0;
             isDefault = true;
@@ -65,24 +61,19 @@ let
 in
 {
   config = mkMerge [
-    # Inject the Firefox home-manager module into all users
     {
       home-manager.sharedModules = [ firefoxHomeModule ];
     }
 
-    # System-level configuration when any user has Firefox enabled
     (mkIf anyEnabled {
-      # Ensure Firefox is available system-wide
       environment.systemPackages = [ pkgs.firefox ];
 
-      # Enable hardware acceleration support
       hardware.graphics = {
         enable = true;
         enable32Bit = true;
       };
     })
 
-    # Conditional persistence for all enabled users
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/preserve" = {
         users = mapAttrs (username: _: {

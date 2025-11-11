@@ -11,6 +11,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.nix.daemon;
 in
 {
@@ -110,11 +111,8 @@ in
           trusted-users
           ;
 
-        # Recommended defaults
         warn-dirty = mkDefault false;
         http-connections = mkDefault 50;
-
-        # Keep outputs and derivations for direnv/nix-direnv
         keep-outputs = true;
         keep-derivations = true;
       };

@@ -12,6 +12,7 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.nix.caches;
 
   cacheType = types.submodule {
@@ -31,7 +32,6 @@ let
     };
   };
 
-  # Default common caches (cache.nixos.org is already included by NixOS)
   defaultCaches = [
     {
       url = "https://nix-community.cachix.org";
@@ -100,7 +100,6 @@ in
   };
 
   config = mkMerge [
-    # Base cache configuration (always applies - Configuration Domain)
     {
       nix.settings = {
         substituters = map (cache: cache.url) allCaches;
@@ -109,7 +108,6 @@ in
       };
     }
 
-    # Smart push capability (conditional - Capability Domain)
     (mkIf cfg.push.enable {
       assertions = [
         {
