@@ -103,7 +103,7 @@ in
       };
       gnome-keyring = {
         enable = true;
-        gcr-ssh-agent = true;
+        gcr-ssh-agent.enable = true;
       };
     };
     boot = {

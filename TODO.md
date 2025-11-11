@@ -139,7 +139,7 @@ These are specific to the ASUS Zephyrus GA402RK and should live in `compositions
 
 ## Phase 5: Applications 🟡
 
-- [ ] **domains/applications/steam.nix** - Gaming platform (Hybrid)
+- [x] **domains/applications/steam.nix** - Gaming platform (Hybrid)
   - Follow firefox hybrid pattern (system + per-user)
   - Extract from lachesis steam system module:
     - `programs.steam.enable = true`
