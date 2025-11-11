@@ -78,11 +78,8 @@ mkMerge [
           github-cli.enable = true;
           claude-code.enable = true;
           jetbrains = {
-            enable = true;
-            ides = with pkgs; [
-              jetbrains.dataspell
-              jetbrains.idea-ultimate
-            ];
+            dataspell.enable = true;
+            ideaUltimate.enable = true;
           };
         };
 

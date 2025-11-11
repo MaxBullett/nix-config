@@ -16,7 +16,11 @@ let
     ;
 
   enabledUsers = filterAttrs (
-    _: userCfg: userCfg.domains.development.jetbrains.enable or false
+    _: userCfg:
+    let
+      jb = userCfg.domains.development.jetbrains or { };
+    in
+    (jb.dataspell.enable or false) || (jb.ideaUltimate.enable or false)
   ) config.home-manager.users;
 
   anyEnabled = enabledUsers != { };
@@ -29,42 +33,25 @@ let
     }:
     let
       cfg = config.domains.development.jetbrains;
+
+      selectedIDEs = lib.flatten [
+        (lib.optional cfg.dataspell.enable pkgs.jetbrains.dataspell)
+        (lib.optional cfg.ideaUltimate.enable pkgs.jetbrains.idea-ultimate)
+      ];
     in
     {
       options.domains.development.jetbrains = {
-        enable = mkEnableOption "JetBrains IDEs";
+        dataspell = {
+          enable = mkEnableOption "DataSpell (Python data science IDE)";
+        };
 
-        ides = mkOption {
-          type = with types; listOf package;
-          default = [ ];
-          description = ''
-            List of JetBrains IDEs to install.
-
-            Available IDEs include:
-            - pkgs.jetbrains.idea-ultimate (IntelliJ IDEA Ultimate)
-            - pkgs.jetbrains.idea-community (IntelliJ IDEA Community)
-            - pkgs.jetbrains.pycharm-professional (PyCharm Professional)
-            - pkgs.jetbrains.pycharm-community (PyCharm Community)
-            - pkgs.jetbrains.webstorm (WebStorm)
-            - pkgs.jetbrains.phpstorm (PhpStorm)
-            - pkgs.jetbrains.clion (CLion)
-            - pkgs.jetbrains.datagrip (DataGrip)
-            - pkgs.jetbrains.dataspell (DataSpell)
-            - pkgs.jetbrains.goland (GoLand)
-            - pkgs.jetbrains.rider (Rider)
-            - pkgs.jetbrains.rust-rover (RustRover)
-          '';
-          example = lib.literalExpression ''
-            with pkgs; [
-              jetbrains.idea-ultimate
-              jetbrains.dataspell
-            ]
-          '';
+        ideaUltimate = {
+          enable = mkEnableOption "IntelliJ IDEA Ultimate";
         };
       };
 
-      config = mkIf cfg.enable {
-        home.packages = cfg.ides;
+      config = mkIf (cfg.dataspell.enable || cfg.ideaUltimate.enable) {
+        home.packages = selectedIDEs;
       };
     };
 in
