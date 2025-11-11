@@ -13,9 +13,9 @@ let
     mkOption
     types
     ;
+
   cfg = config.domains.desktop.cosmic;
 
-  # Find all normal users (COSMIC is system-wide, persistence is per-user)
   normalUsers = filterAttrs (_: user: user.isNormalUser or false) config.users.users;
 
   preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
@@ -90,11 +90,10 @@ in
       domains.storage.btrfs.preservation.mounts."/persist" = {
         users = mapAttrs (username: _: {
           directories = [
-            # COSMIC desktop settings and state
             ".config/cosmic"
+            ".config/cosmic-initial-setup-done"
             ".local/state/cosmic"
             ".local/state/cosmic-comp"
-            # Pop Launcher (app launcher) history and preferences
             ".local/state/pop-launcher"
           ];
         }) normalUsers;
