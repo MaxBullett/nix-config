@@ -68,6 +68,8 @@ in
             ".cache/JetBrains"
             # IDE local data (recent projects, etc.)
             ".local/share/JetBrains"
+            # Java application preferences (used by JetBrains IDEs)
+            ".java/.userPrefs"
           ];
         }) enabledUsers;
       };

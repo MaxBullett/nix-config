@@ -6,6 +6,8 @@
 }:
 let
   inherit (lib)
+    filterAttrs
+    mapAttrs
     mkEnableOption
     mkOption
     mkIf
@@ -13,6 +15,10 @@ let
     ;
 
   cfg = config.domains.security.sops;
+
+  preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
+
+  normalUsers = filterAttrs (_: user: user.isNormalUser or false) config.users.users;
 in
 {
   imports = [ inputs.sops-nix.nixosModules.sops ];
@@ -43,6 +49,14 @@ in
         keyFile = "/var/lib/sops-nix/key.txt";
         generateKey = true;
       };
+    };
+
+    domains.storage.btrfs.preservation.mounts = mkIf preservationEnabled {
+      "/persist".users = mapAttrs (username: _: {
+        directories = [
+          ".config/sops"
+        ];
+      }) normalUsers;
     };
   };
 }
