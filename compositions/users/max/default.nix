@@ -83,7 +83,10 @@ mkMerge [
           };
         };
 
-        tools.yazi.enable = true;
+        tools = {
+          yazi.enable = true;
+          ripgrep.enable = true;
+        };
 
         desktop.xdg = {
           enable = true;
