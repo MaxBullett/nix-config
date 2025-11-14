@@ -134,6 +134,10 @@ mkMerge [
             enable = true;
             extraCompatPackages = with pkgs; [ proton-ge-bin ];
           };
+          obs-studio = {
+            enable = true;
+            enableVirtualCamera = true;
+          };
         };
       };
 
