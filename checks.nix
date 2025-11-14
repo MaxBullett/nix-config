@@ -9,7 +9,10 @@
     default_stages = [ "pre-commit" ];
     hooks = {
       # General
-      check-added-large-files.enable = true;
+      check-added-large-files = {
+        enable = true;
+        args = [ "--maxkb=2048" ]; # 2MB limit
+      };
       check-case-conflicts.enable = true;
       check-executables-have-shebangs.enable = true;
       check-merge-conflicts.enable = true;
