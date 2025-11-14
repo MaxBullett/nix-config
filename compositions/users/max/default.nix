@@ -138,6 +138,10 @@ mkMerge [
             enable = true;
             enableVirtualCamera = true;
           };
+          flatpak = {
+            enable = true;
+            betaPackages = [ "com.stremio.Stremio" ];
+          };
         };
       };
 

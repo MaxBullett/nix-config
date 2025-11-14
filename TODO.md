@@ -16,13 +16,11 @@ This document tracks the migration from lachesis to nix-config and additional fe
 - ✅ All hardware & peripherals (firmware, sensors, power management)
 - ✅ All networking services (NetworkManager, avahi, bluetooth)
 - ✅ Storage & backups (btrfs preservation, btrbk snapshots, restic remote backup)
-- ✅ User applications (Steam, Firefox, JetBrains IDEs, claude-code, ripgrep)
+- ✅ All applications (Steam, Flatpak w/ Stremio, OBS Studio, Firefox, JetBrains IDEs, etc.)
 - ✅ All critical user persistence paths auto-managed by domains
-- ✅ 40+ domain modules with DDD-compliant architecture
+- ✅ 45+ domain modules with DDD-compliant architecture
 
 **Optional Post-Migration Tasks:**
-- 🟢 Flatpak domain (only if you use flatpak apps)
-- 🟢 OBS Studio domain (only if you do screen recording)
 - 🟢 Stylix theming research
 - 📋 Documentation improvements
 
@@ -163,7 +161,7 @@ These are specific to the ASUS Zephyrus GA402RK and should live in `compositions
 
 ---
 
-## Phase 5: Applications ✅ MOSTLY COMPLETE
+## Phase 5: Applications ✅ COMPLETE
 
 - [x] **domains/applications/steam.nix** - Gaming platform (Hybrid)
   - ✅ Fully implemented with hybrid pattern
@@ -172,18 +170,20 @@ These are specific to the ASUS Zephyrus GA402RK and should live in `compositions
   - Automatic persistence: `.local/share/Steam`, `.steam`
   - Proton GE support enabled in max user config
 
-### Optional Applications 🟢
+- [x] **domains/applications/flatpak.nix** - Flatpak support
+  - ✅ Declarative package management via systemd service
+  - Supports both flathub and flathub-beta remotes
+  - Simple `packages` and `betaPackages` options
+  - Automatic remote setup and package installation
+  - Full persistence: `/var/lib/flatpak`, `.local/share/flatpak`, `.var/app`
+  - Stremio 5 installed from flathub-beta
 
-- [ ] **domains/applications/flatpak.nix** - Flatpak support (OPTIONAL)
-  - Only needed if you use flatpak applications
-  - System: `services.flatpak.enable = true`
-  - System persistence: `/var/lib/flatpak`
-  - User persistence: `.local/share/flatpak`, `.var/app`
-
-- [ ] **domains/applications/obs-studio.nix** - Screen recording (OPTIONAL)
-  - Only needed if you do screen recording
-  - Hybrid pattern with extensive plugin support
-  - Virtual camera, wlrobs, backgroundremoval, pipewire, vaapi, etc.
+- [x] **domains/applications/obs-studio.nix** - Screen recording (Hybrid)
+  - ✅ Fully implemented with default plugin set from lachesis
+  - Virtual camera support (enabled for max)
+  - Plugins: wlrobs, backgroundremoval, pipewire, vaapi, gstreamer, vkcapture
+  - Automatic persistence: `.config/obs-studio`
+  - Hardware acceleration enabled
 
 ---
 
@@ -203,9 +203,9 @@ All critical user persistence paths are now automatically handled by their respe
 - [x] `.config/JetBrains`, `.cache/JetBrains`, `.local/share/JetBrains` → **jetbrains domain**
 - [x] `.java/.userPrefs` → **jetbrains domain** (added Nov 2024)
 - [x] `.config/sops` → **sops domain** (added Nov 2024)
+- [x] `.local/share/flatpak`, `.var/app` → **flatpak domain** (added Nov 2024)
 - [x] ~~`.gnupg`~~ → **NOT NEEDED** (using SSH signing for git, not GPG)
 - [x] ~~`.local/share/zsh`~~ → **NOT NEEDED** (migrated to nushell)
-- [ ] `.local/share/flatpak`, `.var/app` → **Needs flatpak domain** (only if using flatpak)
 
 ### User Packages - Auto-Handled by Domains ✅
 
@@ -299,9 +299,10 @@ Future:   btrfs snapshots of @preserve subvolume
 4. ✅ **Networking** (1 module + LC3 verified) - COMPLETE
    - avahi for mDNS/Zeroconf service discovery
    - LC3 already works via bluetooth.settings.General.Experimental
-5. ✅ **Applications** (Steam complete, flatpak/OBS optional) - MOSTLY COMPLETE
+5. ✅ **Applications** (Steam, Flatpak, OBS Studio) - COMPLETE
    - steam domain fully implemented with hybrid pattern
-   - flatpak and obs-studio are optional (not needed for basic functionality)
+   - flatpak domain with declarative package management
+   - obs-studio domain with full plugin support
 6. ✅ **User Environment** (all critical paths handled by domains) - COMPLETE
    - All user persistence auto-managed by respective domains
    - Recent additions: ripgrep domain, jetbrains Java prefs (Nov 2024)
@@ -311,13 +312,13 @@ Future:   btrfs snapshots of @preserve subvolume
    - Nice to have, not blocking migration
 9. 🔴 **Testing** (deployment test) - CRITICAL REMAINING TASK
 
-### Migration Progress (Updated Nov 2024)
-- ✅ **All essential lachesis functionality migrated**
+### Migration Progress (Updated Nov 14, 2024)
+- ✅ **ALL lachesis functionality migrated - 100% feature parity!**
 - ✅ **All critical user persistence handled by domains**
 - ✅ Phases 1-6 complete (all core functionality)
-- ✅ 40+ domain modules implemented with auto-persistence
-- ✅ All critical paths from lachesis accounted for
+- ✅ 45+ domain modules implemented with auto-persistence
+- ✅ All applications from lachesis now in domains (Steam, Flatpak, OBS Studio)
 - ✅ Architecture docs updated (one-way dependencies clarified)
 - ✅ 100% DDD compliance verified
 - 🔴 **READY FOR DEPLOYMENT TESTING**
-- 📦 Optional tasks remaining: flatpak, obs-studio, theming, docs
+- 📦 Optional tasks remaining: stylix theming, documentation
