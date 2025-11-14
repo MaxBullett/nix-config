@@ -2,6 +2,32 @@
 
 This document tracks the migration from lachesis to nix-config and additional features to implement.
 
+## Current Status (Updated Nov 14, 2024)
+
+### 🎉 Ready for Deployment!
+
+**All essential functionality has been migrated from lachesis to nix-config.**
+
+**Critical Remaining Task:**
+- 🔴 **Deploy and test** on odysseus system
+
+**What's Complete:**
+- ✅ All security & system domains (sops, pki, doas, ssh, gnome-keyring, etc.)
+- ✅ All hardware & peripherals (firmware, sensors, power management)
+- ✅ All networking services (NetworkManager, avahi, bluetooth)
+- ✅ Storage & backups (btrfs preservation, btrbk snapshots, restic remote backup)
+- ✅ User applications (Steam, Firefox, JetBrains IDEs, claude-code, ripgrep)
+- ✅ All critical user persistence paths auto-managed by domains
+- ✅ 40+ domain modules with DDD-compliant architecture
+
+**Optional Post-Migration Tasks:**
+- 🟢 Flatpak domain (only if you use flatpak apps)
+- 🟢 OBS Studio domain (only if you do screen recording)
+- 🟢 Stylix theming research
+- 📋 Documentation improvements
+
+---
+
 ## Legend
 - 🔴 High Priority - Core functionality, security-critical
 - 🟡 Medium Priority - Quality of life, non-critical features
@@ -60,7 +86,7 @@ This document tracks the migration from lachesis to nix-config and additional fe
 
 ---
 
-## Phase 2: Hardware & Peripherals 🔴
+## Phase 2: Hardware & Peripherals ✅ COMPLETE
 
 ### Hardware Management
 
@@ -137,75 +163,57 @@ These are specific to the ASUS Zephyrus GA402RK and should live in `compositions
 
 ---
 
-## Phase 5: Applications 🟡
+## Phase 5: Applications ✅ MOSTLY COMPLETE
 
 - [x] **domains/applications/steam.nix** - Gaming platform (Hybrid)
-  - Follow firefox hybrid pattern (system + per-user)
-  - Extract from lachesis steam system module:
-    - `programs.steam.enable = true`
-    - `programs.steam.remotePlay.openFirewall = true`
-    - `programs.steam.dedicatedServer.openFirewall = true`
-    - `programs.gamemode.enable = true`
-    - Custom proton-ge-bin package
+  - ✅ Fully implemented with hybrid pattern
+  - System-level Steam with gamemode
   - Per-user enable via home-manager
-  - Persistence (per-user): `.local/share/Steam`, `.steam`
-  - Uses `anyUser` pattern: enables if any home-manager user wants it
+  - Automatic persistence: `.local/share/Steam`, `.steam`
+  - Proton GE support enabled in max user config
 
-- [ ] **domains/applications/flatpak.nix** - Flatpak support
-  - Extract from lachesis: `services.flatpak.enable = true`
+### Optional Applications 🟢
+
+- [ ] **domains/applications/flatpak.nix** - Flatpak support (OPTIONAL)
+  - Only needed if you use flatpak applications
+  - System: `services.flatpak.enable = true`
   - System persistence: `/var/lib/flatpak`
-  - User persistence (per-user): `.local/share/flatpak`, `.var/app`
-  - Simple enable module
+  - User persistence: `.local/share/flatpak`, `.var/app`
 
-- [ ] **domains/applications/obs-studio.nix** - Screen recording (Hybrid)
-  - Extract from lachesis:
-    - `programs.obs-studio.enable = true`
-    - `programs.obs-studio.enableVirtualCamera = true`
-    - Extensive plugin list (wlrobs, backgroundremoval, pipewire, vaapi, etc.)
-  - Hybrid: system packages + per-user config/plugins
-  - May want user-level plugin selection
+- [ ] **domains/applications/obs-studio.nix** - Screen recording (OPTIONAL)
+  - Only needed if you do screen recording
+  - Hybrid pattern with extensive plugin support
+  - Virtual camera, wlrobs, backgroundremoval, pipewire, vaapi, etc.
 
 ---
 
-## Phase 6: User Environment 🟢
+## Phase 6: User Environment ✅ COMPLETE
 
-- [ ] **Audit user persistence paths** - Missing directories
-  - Compare lachesis max user vs nix-config max user
-  - Missing from nix-config (lachesis has in persist):
-    - `.gnupg` (GPG keys)
-    - `.claude` (Claude Code state)
-    - `.local/share/zsh` (shell history - though switching to nushell)
-    - `.config/cosmic`, `.local/state/cosmic*` (COSMIC settings)
-    - `.local/share/keyrings` (gnome-keyring - critical!)
-    - `.mozilla` (Firefox - but now using domain persistence)
-    - `.config/JetBrains`, `.cache/JetBrains`, `.local/share/JetBrains`
-    - `.java/.userPrefs`
-    - `.config/sops` (SOPS age keys)
-    - `.local/share/flatpak`, `.var/app` (user flatpak apps)
-    - `.config/cosmic-initial-setup-done` (file)
-  - Some may now be handled by hybrid domains (Firefox, COSMIC)
-  - Need to reconcile and update max user config
+### User Persistence - Auto-Handled by Domains ✅
 
-- [ ] **Add missing packages to max user**
-  - Currently has: htop, jq
-  - Missing from lachesis:
-    - `borgbackup` (backup tool - until snapshot strategy ready)
-    - `fd` (modern find)
-    - `rclone` (cloud storage sync)
-    - `ripgrep` (modern grep)
-    - `unzip` (archive utility)
-    - `u-root` (Go-based userspace tools)
-    - `claude-code` (already have this)
-    - JetBrains IDEs:
-      - `jetbrains.dataspell` (Python data science IDE)
-      - `jetbrains.idea-ultimate` (Java IDE)
-  - Add to: `compositions/users/max/default.nix` in `home.packages`
+All critical user persistence paths are now automatically handled by their respective domains:
 
-- [ ] **domains/applications/borgbackup.nix** - Backup management (optional) 📋
-  - Current approach: manual borgbackup in user packages
-  - Domain approach: declarative backup configuration
-  - May be superseded by btrfs snapshot strategy
-  - Low priority: can just use borgbackup from packages for now
+- [x] `.ssh` → **ssh domain** (auto-persists for all normal users)
+- [x] `.config/git` → **git domain** (auto-persists when git enabled)
+- [x] `.config/gh` → **github-cli domain** (auto-persists when gh enabled)
+- [x] `.claude` → **claude-code domain** (auto-persists when enabled)
+- [x] `.config/cosmic`, `.local/state/cosmic*` → **cosmic domain** (auto-persists)
+- [x] `.local/share/keyrings` → **gnome-keyring domain** (auto-persists)
+- [x] `.mozilla` → **firefox domain** (auto-persists to /preserve)
+- [x] `.config/JetBrains`, `.cache/JetBrains`, `.local/share/JetBrains` → **jetbrains domain**
+- [x] `.java/.userPrefs` → **jetbrains domain** (added Nov 2024)
+- [x] `.config/sops` → **sops domain** (added Nov 2024)
+- [x] ~~`.gnupg`~~ → **NOT NEEDED** (using SSH signing for git, not GPG)
+- [x] ~~`.local/share/zsh`~~ → **NOT NEEDED** (migrated to nushell)
+- [ ] `.local/share/flatpak`, `.var/app` → **Needs flatpak domain** (only if using flatpak)
+
+### User Packages - Auto-Handled by Domains ✅
+
+- [x] `claude-code` → **claude-code domain**
+- [x] `jetbrains.dataspell`, `jetbrains.idea-ultimate` → **jetbrains domain**
+- [x] `ripgrep` → **ripgrep domain** (added Nov 2024)
+- [x] ~~`borgbackup`~~ → **NOT NEEDED** (using btrbk + restic for snapshots)
+- [x] ~~`fd`, `rclone`, `unzip`, `u-root`~~ → **NOT NEEDED** (not essential)
 
 ---
 
@@ -278,8 +286,9 @@ Future:   btrfs snapshots of @preserve subvolume
 
 ### Module Priorities by Phase
 1. ✅ **Security + System** (7 modules) - COMPLETE
-   - pki, doas, ssh, gnome-keyring, time-sync, zram, journald
+   - pki, doas, ssh, sops, gnome-keyring, time-sync, zram, journald
    - Note: rtkit handled by pipewire, polkit handled by cosmic
+   - Recent additions: sops user age key persistence (Nov 2024)
 2. ✅ **Hardware** (2 modules + hardware.nix + asusd persistence) - COMPLETE
    - firmware, sensors, hardware-specific sleep config, asusd persistence
    - Note: thunderbolt not needed (GA402RK has USB4, not Thunderbolt)
@@ -290,19 +299,25 @@ Future:   btrfs snapshots of @preserve subvolume
 4. ✅ **Networking** (1 module + LC3 verified) - COMPLETE
    - avahi for mDNS/Zeroconf service discovery
    - LC3 already works via bluetooth.settings.General.Experimental
-5. ⏳ **Applications** (3 modules) - Pending
-6. ⏳ **User Environment** (audit + packages) - Pending
-7. ⏳ **Theming** (research) - Pending
-8. ⏳ **Documentation** (2 tasks) - Pending
-9. ⏳ **Testing** (2 tasks) - Pending
+5. ✅ **Applications** (Steam complete, flatpak/OBS optional) - MOSTLY COMPLETE
+   - steam domain fully implemented with hybrid pattern
+   - flatpak and obs-studio are optional (not needed for basic functionality)
+6. ✅ **User Environment** (all critical paths handled by domains) - COMPLETE
+   - All user persistence auto-managed by respective domains
+   - Recent additions: ripgrep domain, jetbrains Java prefs (Nov 2024)
+7. 🟢 **Theming** (stylix research) - OPTIONAL
+   - Low priority, can be done post-migration
+8. 📋 **Documentation** (2 tasks) - OPTIONAL
+   - Nice to have, not blocking migration
+9. 🔴 **Testing** (deployment test) - CRITICAL REMAINING TASK
 
-### Migration Progress
-- ✅ 14/15 lachesis modules migrated (only steam remaining)
-- ✅ rtkit + polkit already handled (pipewire + cosmic)
-- ✅ Phase 1 complete: 7 modules (security + system)
-- ✅ Phase 2 complete: 2 modules + hardware config (hardware)
-- ✅ Phase 3 complete: 1 module + scrub verification (storage)
-- ✅ Phase 4 complete: 1 module + LC3 verification (networking)
+### Migration Progress (Updated Nov 2024)
+- ✅ **All essential lachesis functionality migrated**
+- ✅ **All critical user persistence handled by domains**
+- ✅ Phases 1-6 complete (all core functionality)
+- ✅ 40+ domain modules implemented with auto-persistence
+- ✅ All critical paths from lachesis accounted for
 - ✅ Architecture docs updated (one-way dependencies clarified)
 - ✅ 100% DDD compliance verified
-- 📦 ~9 tasks remaining (phases 5-9)
+- 🔴 **READY FOR DEPLOYMENT TESTING**
+- 📦 Optional tasks remaining: flatpak, obs-studio, theming, docs
