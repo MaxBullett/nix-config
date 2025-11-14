@@ -31,6 +31,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Stylix theming framework (https://nix-community.github.io/stylix/)
+    # Pinned to before opencode module was added (which has compatibility issues)
+    stylix = {
+      url = "github:nix-community/stylix/8d008296a1b3be9b57ad570f7acea00dd2fc92db";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Ephemeral-state management using preservation https://github.com/nix-community/preservation
     preservation.url = "github:nix-community/preservation";
 
@@ -65,6 +72,21 @@
           system = pkgs.system or pkgs.stdenv.hostPlatform.system;
         in
         import ./checks.nix { inherit inputs system pkgs; }
+      );
+
+      # Development shells
+      devShells = forAllSystems (
+        pkgs:
+        let
+          system = pkgs.system or pkgs.stdenv.hostPlatform.system;
+          checks = import ./checks.nix { inherit inputs system pkgs; };
+        in
+        {
+          default = pkgs.mkShell {
+            inherit (checks.pre-commit-check) shellHook;
+            buildInputs = checks.pre-commit-check.enabledPackages;
+          };
+        }
       );
 
       # Hosts

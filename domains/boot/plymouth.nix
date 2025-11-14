@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
@@ -15,11 +14,7 @@ in
 
   config = mkIf cfg.enable {
     boot = {
-      plymouth = {
-        enable = true;
-        theme = "catppuccin-macchiato";
-        themePackages = [ pkgs.catppuccin-plymouth ];
-      };
+      plymouth.enable = true;
 
       # Kernel parameters needed for Plymouth to work properly
       kernelParams = [

@@ -59,10 +59,7 @@ mkMerge [
           carapace.enable = true;
         };
 
-        editors.helix = {
-          enable = true;
-          theme = "catppuccin_macchiato";
-        };
+        editors.helix.enable = true;
 
         development = {
           direnv.enable = true;

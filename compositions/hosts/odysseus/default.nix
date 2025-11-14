@@ -181,10 +181,15 @@ in
     audio.pipewire.enable = true;
     printing.cups.enable = true;
     desktop = {
-      fonts.enable = true;
       cosmic = {
         enable = true;
         cosmic-greeter.enable = true;
+      };
+      stylix = {
+        enable = true;
+        scheme = "catppuccin-macchiato";
+        polarity = "dark";
+        wallpaper = ./wallpaper.jpg;
       };
     };
     development.docker.enable = true;

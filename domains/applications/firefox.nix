@@ -44,10 +44,10 @@ let
         programs.firefox = {
           enable = true;
 
-          profiles.default = mkIf cfg.enableHardwareAcceleration {
+          profiles.default = {
             id = 0;
             isDefault = true;
-            settings = {
+            settings = mkIf cfg.enableHardwareAcceleration {
               "media.ffmpeg.vaapi.enabled" = true;
               "media.hardware-video-decoding.force-enabled" = true;
               "media.rdd-ffmpeg.enabled" = true;
@@ -56,6 +56,9 @@ let
             };
           };
         };
+
+        # Tell Stylix which Firefox profile to theme (harmless if Stylix not enabled)
+        stylix.targets.firefox.profileNames = [ "default" ];
       };
     };
 in
