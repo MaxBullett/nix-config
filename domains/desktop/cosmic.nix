@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -65,6 +66,19 @@ in
         }
       ];
 
+      # Patch cosmic-session to use correct gcr-ssh-agent socket path
+      # Upstream issue: https://github.com/pop-os/cosmic-session/issues/148
+      nixpkgs.overlays = [
+        (final: prev: {
+          cosmic-session = prev.cosmic-session.overrideAttrs (oldAttrs: {
+            postPatch = (oldAttrs.postPatch or "") + ''
+              substituteInPlace data/start-cosmic \
+                --replace-fail '/keyring/ssh' '/gcr/ssh'
+            '';
+          });
+        })
+      ];
+
       services.displayManager = {
         inherit (cfg) cosmic-greeter;
 
@@ -79,11 +93,20 @@ in
         inherit (cfg) xwayland;
       };
 
-      # Fix clipboard issues in COSMIC
-      environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
+      environment.sessionVariables = {
+        # Fix clipboard issues in COSMIC
+        COSMIC_DATA_CONTROL_ENABLED = 1;
 
-      # Required for desktop privilege operations (mounting, power management, etc.)
-      security.polkit.enable = true;
+        # Wayland Environment Fixes
+        NIXOS_OZONE_WL = "1"; # Electron
+        SDL_VIDEODRIVER = "wayland"; # Steam
+        COSMIC_DISABLE_DIRECT_SCANOUT = "true"; # Fullscreen issues
+      };
+
+      environment.systemPackages = with pkgs; [
+        ffmpegthumbnailer
+        wl-clipboard
+      ];
     })
 
     # Conditional persistence for all normal users
