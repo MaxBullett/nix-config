@@ -54,28 +54,39 @@ in
       };
       path = with pkgs; [
         coreutils
-        p11-kit
+        openssl
       ];
       script = ''
         set -euo pipefail
 
-        # p11-kit looks for certificates in /etc/pki/trust/source/anchors on NixOS
-        CERT_DIR="/etc/pki/trust/source/anchors"
-        mkdir -p "$CERT_DIR"
+        # On NixOS, we need to add certificates to /etc/ssl/certs manually
+        CERT_DIR="/etc/ssl/certs"
 
         ${concatMapStringsSep "\n" (certPath: ''
           if [ -f "${certPath}" ]; then
             CERT_NAME="$(basename "${certPath}")"
+            # Copy certificate
             cp -f "${certPath}" "$CERT_DIR/$CERT_NAME"
-            echo "Installed certificate: $CERT_NAME"
+
+            # Create hash-based symlink for OpenSSL compatibility
+            HASH=$(openssl x509 -noout -hash -in "${certPath}" 2>/dev/null || echo "")
+            if [ -n "$HASH" ]; then
+              # Find next available .N suffix
+              SUFFIX=0
+              while [ -L "$CERT_DIR/$HASH.$SUFFIX" ] || [ -f "$CERT_DIR/$HASH.$SUFFIX" ]; do
+                SUFFIX=$((SUFFIX + 1))
+              done
+              ln -sf "$CERT_NAME" "$CERT_DIR/$HASH.$SUFFIX"
+              echo "Installed certificate: $CERT_NAME (hash: $HASH.$SUFFIX)"
+            else
+              echo "Warning: Could not compute hash for ${certPath}, skipping symlink" >&2
+            fi
           else
             echo "Warning: Certificate file not found: ${certPath}" >&2
           fi
         '') cfg.certificatePaths}
 
-        # Rebuild system trust store with new certificates
-        ${pkgs.p11-kit}/bin/trust extract-compat
-        echo "System trust store updated successfully"
+        echo "Custom CA certificates installed successfully"
       '';
     };
   };
