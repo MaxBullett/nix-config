@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -16,6 +17,25 @@ in
 {
   options.domains.boot.systemd-boot = {
     enable = mkEnableOption "systemd-boot as the system EFI boot loader.";
+
+    kernel = mkOption {
+      type = types.enum [
+        "default"
+        "latest"
+        "zen"
+        "xanmod"
+        "lts"
+      ];
+      default = "default";
+      description = ''
+        Which Linux kernel to use:
+        - default: NixOS default kernel (stable)
+        - latest: Latest stable kernel
+        - zen: Zen kernel (optimized for desktop responsiveness)
+        - xanmod: XanMod kernel (optimized for gaming and low latency)
+        - lts: Long-term support kernel
+      '';
+    };
 
     configurationLimit = mkOption {
       type = types.nullOr types.int;
@@ -44,6 +64,16 @@ in
 
   config = mkIf cfg.enable {
     boot = {
+      kernelPackages =
+        mkIf (cfg.kernel != "default")
+          {
+            latest = pkgs.linuxPackages_latest;
+            zen = pkgs.linuxPackages_zen;
+            xanmod = pkgs.linuxPackages_xanmod_latest;
+            lts = pkgs.linuxPackages;
+          }
+          .${cfg.kernel};
+
       loader = {
         systemd-boot = {
           enable = mkDefault true;

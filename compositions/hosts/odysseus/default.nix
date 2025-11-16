@@ -104,7 +104,10 @@ in
     };
     boot = {
       plymouth.enable = true;
-      systemd-boot.enable = true;
+      systemd-boot = {
+        enable = true;
+        kernel = "latest"; # Use latest stable kernel
+      };
     };
     storage.btrfs = {
       enable = true;
