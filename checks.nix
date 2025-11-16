@@ -18,14 +18,6 @@
       check-merge-conflicts.enable = true;
       check-shebang-scripts-are-executable.enable = false; # .envrc false positive
       check-symlinks.enable = true;
-      destroyed-symlinks = {
-        enable = true;
-        name = "destroyed-symlinks";
-        description = "detects symlinks which are changed to regular files with a content of a path which that symlink was pointing to.";
-        package = inputs.pre-commit-hooks.checks.${system}.pre-commit-hooks;
-        entry = "${inputs.pre-commit-hooks.checks.${system}.pre-commit-hooks}/bin/destroyed-symlinks";
-        types = [ "symlink" ];
-      };
       detect-private-keys.enable = true;
       end-of-file-fixer.enable = true;
       fix-byte-order-marker.enable = true;
