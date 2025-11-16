@@ -65,8 +65,12 @@ mkMerge [
           direnv.enable = true;
           git = {
             enable = true;
-            userName = "MaxBullett";
-            userEmail = "31956266+MaxBullett@users.noreply.github.com";
+            settings = {
+              user = {
+                name = "MaxBullett";
+                email = "31956266+MaxBullett@users.noreply.github.com";
+              };
+            };
             signing = {
               enable = true;
               key = "~/.ssh/id_ed25519.pub";

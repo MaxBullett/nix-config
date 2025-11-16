@@ -30,16 +30,57 @@ let
       options.domains.development.git = {
         enable = mkEnableOption "Git version control";
 
-        userName = mkOption {
-          type = types.str;
-          description = "User name for git commits";
-          example = "John Doe";
+        settings = {
+          user = {
+            name = mkOption {
+              type = types.str;
+              description = "User name for git commits";
+              example = "John Doe";
+            };
+
+            email = mkOption {
+              type = types.str;
+              description = "User email for git commits";
+              example = "john@example.com";
+            };
+          };
+
+          alias = mkOption {
+            type = types.attrsOf types.str;
+            default = {
+              co = "checkout";
+              br = "branch";
+              st = "status -sb";
+              ci = "commit";
+              last = "log -1 HEAD";
+              unstage = "reset HEAD --";
+              graph = "log --graph --oneline --decorate --all";
+            };
+            description = ''
+              Git aliases (git-internal, work in any shell).
+              These are added to git config and invoked as: git <alias>
+            '';
+          };
+
+          init = {
+            defaultBranch = mkOption {
+              type = types.str;
+              default = "main";
+              description = "Default branch name for new repositories";
+            };
+          };
         };
 
-        userEmail = mkOption {
-          type = types.str;
-          description = "User email for git commits";
-          example = "john@example.com";
+        extraSettings = mkOption {
+          type = types.attrs;
+          default = { };
+          description = "Additional git configuration settings";
+          example = lib.literalExpression ''
+            {
+              pull.rebase = true;
+              fetch.prune = true;
+            }
+          '';
         };
 
         signing = {
@@ -70,39 +111,6 @@ let
             example = "gruvbox-dark";
           };
         };
-
-        defaultBranch = mkOption {
-          type = types.str;
-          default = "main";
-          description = "Default branch name for new repositories";
-        };
-
-        aliases = mkOption {
-          type = types.attrsOf types.str;
-          default = {
-            co = "checkout";
-            br = "branch";
-            st = "status -sb";
-            ci = "commit";
-            last = "log -1 HEAD";
-            unstage = "reset HEAD --";
-            graph = "log --graph --oneline --decorate --all";
-          };
-          description = ''
-            Git aliases (git-internal, work in any shell).
-            These are added to git config and invoked as: git <alias>
-          '';
-        };
-
-        extraConfig = mkOption {
-          type = types.attrs;
-          default = { };
-          description = "Additional git configuration options";
-          example = {
-            pull.rebase = true;
-            fetch.prune = true;
-          };
-        };
       };
 
       config = mkIf cfg.enable {
@@ -110,15 +118,9 @@ let
           enable = true;
           package = pkgs.git;
 
-          inherit (cfg)
-            userName
-            userEmail
-            aliases
-            ;
-
-          extraConfig = lib.mkMerge [
+          settings = lib.mkMerge [
             {
-              init.defaultBranch = cfg.defaultBranch;
+              inherit (cfg.settings) user alias init;
 
               pull.rebase = true;
               fetch.prune = true;
@@ -149,7 +151,7 @@ let
               diff.colorMoved = "default";
             })
 
-            cfg.extraConfig
+            cfg.extraSettings
           ];
         };
 
