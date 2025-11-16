@@ -168,7 +168,7 @@ in
     })
 
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
-      domains.storage.btrfs.preservation.mounts."/preserve" = {
+      domains.storage.btrfs.preservation.mounts."/persist" = {
         users = mapAttrs (username: _: {
           directories = [
             ".config/git"
