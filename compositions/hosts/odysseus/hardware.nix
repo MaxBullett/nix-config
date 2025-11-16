@@ -35,4 +35,7 @@
     SuspendState=mem
     SuspendMode=
   '';
+
+  # Upstream issue causing asusd spam
+  systemd.services.asusd.serviceConfig.LogLevelMax = "warning";
 }
