@@ -48,7 +48,7 @@ let
           ffmpegthumbnailer # Video thumbnails
           unar # Archive preview
           jq # JSON preview
-          poppler_utils # PDF preview
+          poppler-utils # PDF preview
           fd # File searching
           ripgrep # Content searching
           fzf # Fuzzy finding
