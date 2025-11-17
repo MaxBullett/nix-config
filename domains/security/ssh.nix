@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -9,153 +10,228 @@ let
     mapAttrs
     mkEnableOption
     mkIf
+    mkMerge
     mkOption
     types
     ;
 
   cfg = config.domains.security.ssh;
 
-  preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
+  enabledUsers = filterAttrs (
+    _: userCfg: userCfg.domains.security.ssh.enable or false
+  ) config.home-manager.users;
 
-  normalUsers = filterAttrs (_: user: user.isNormalUser or false) config.users.users;
+  anyEnabled = enabledUsers != { };
+
+  sshHomeModule =
+    { config, ... }:
+    let
+      userCfg = config.domains.security.ssh;
+    in
+    {
+      options.domains.security.ssh = {
+        enable = mkEnableOption "SSH client configuration";
+
+        extraConfig = mkOption {
+          type = types.lines;
+          default = "";
+          description = ''
+            Raw SSH config to add to ~/.ssh/config.
+            For host-specific settings, prefer using matchBlocks for type safety.
+            Use this only for options not available in matchBlocks.
+          '';
+          example = ''
+            # Advanced options not available in matchBlocks
+            ControlMaster auto
+            ControlPath ~/.ssh/sockets/%r@%h:%p
+            ControlPersist 10m
+          '';
+        };
+
+        matchBlocks = mkOption {
+          type = types.attrsOf (
+            types.submodule {
+              options = {
+                hostname = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "The hostname to connect to";
+                };
+
+                user = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "User to log in as";
+                };
+
+                port = mkOption {
+                  type = types.nullOr types.int;
+                  default = null;
+                  description = "Port to connect to on the remote host";
+                };
+
+                identityFile = mkOption {
+                  type = types.nullOr (types.either types.str (types.listOf types.str));
+                  default = null;
+                  description = "Identity file(s) to use for authentication";
+                };
+
+                identitiesOnly = mkOption {
+                  type = types.nullOr types.bool;
+                  default = null;
+                  description = "Only use identity files configured in SSH config";
+                };
+
+                forwardAgent = mkOption {
+                  type = types.nullOr types.bool;
+                  default = null;
+                  description = "Forward SSH agent to the remote machine";
+                };
+
+                extraOptions = mkOption {
+                  type = types.attrsOf types.str;
+                  default = { };
+                  description = "Additional SSH options for this host";
+                };
+              };
+            }
+          );
+          default = { };
+          description = ''
+            SSH host configurations using structured options.
+            Alternative to extraConfig for type-safe host configuration.
+          '';
+          example = lib.literalExpression ''
+            {
+              "github.com" = {
+                identityFile = "~/.ssh/id_ed25519";
+                identitiesOnly = true;
+              };
+              "*.example.com" = {
+                user = "admin";
+                port = 2222;
+              };
+            }
+          '';
+        };
+
+      };
+
+      config = mkIf userCfg.enable {
+        programs.ssh = {
+          enable = true;
+          inherit (userCfg) extraConfig;
+
+          # Disable default config to avoid future deprecation warnings
+          enableDefaultConfig = false;
+
+          # Manually configure defaults via global match block
+          matchBlocks = userCfg.matchBlocks // {
+            "*" = {
+              # Automatically add keys to agent when first used
+              addKeysToAgent = "yes";
+            };
+          };
+        };
+
+        # Ensure .ssh directory exists with correct permissions
+        home.file.".ssh/.keep".text = "";
+        home.file.".ssh/.keep".onChange = ''
+          chmod 700 ~/.ssh
+        '';
+      };
+    };
 in
 {
   options.domains.security.ssh = {
-    enable = mkEnableOption "SSH client configuration";
+    server = {
+      enable = mkEnableOption "SSH server (sshd)";
 
-    forwardAgent = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Forward SSH agent to remote hosts.
-        When false (default), more secure - agent stays local.
-        Enable per-host in matchBlocks for specific trusted servers.
-      '';
-    };
-
-    hashKnownHosts = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Hash host names and addresses in known_hosts file.
-        Improves privacy by obscuring which hosts you connect to.
-      '';
-    };
-
-    keepAlive = {
-      enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = ''
-          Send periodic keepalive messages to maintain connections.
-          Prevents SSH sessions from timing out during idle periods.
-          Essential for long-running sessions.
-        '';
-      };
-
-      interval = mkOption {
+      port = mkOption {
         type = types.int;
-        default = 60;
-        description = ''
-          Interval in seconds between keepalive messages.
-          Default: 60 seconds
-        '';
+        default = 22;
+        description = "Port for SSH server to listen on";
       };
 
-      countMax = mkOption {
-        type = types.int;
-        default = 3;
-        description = ''
-          Number of keepalive messages sent without response before disconnecting.
-          Default: 3 (disconnect after ~3 minutes of no response)
-        '';
+      permitRootLogin = mkOption {
+        type = types.str;
+        default = "prohibit-password";
+        description = "Whether root can log in via SSH";
       };
-    };
 
-    multiplexing = {
-      enable = mkOption {
+      passwordAuthentication = mkOption {
         type = types.bool;
         default = false;
-        description = ''
-          Enable connection multiplexing for better performance.
-          Reuses existing SSH connections for subsequent sessions to the same host.
-          Significantly speeds up repeated connections (e.g., git operations, multiple terminals).
-        '';
+        description = "Whether to allow password authentication";
       };
-
-      controlPath = mkOption {
-        type = types.str;
-        default = "/tmp/ssh-%r@%h:%p";
-        description = ''
-          Path for control socket files.
-          Variables: %r (remote user), %h (host), %p (port)
-        '';
-      };
-
-      controlPersist = mkOption {
-        type = types.str;
-        default = "10m";
-        description = ''
-          How long to keep master connection alive after last session closes.
-          Examples: "10m" (10 minutes), "1h" (1 hour), "yes" (forever)
-        '';
-      };
-    };
-
-    extraConfig = mkOption {
-      type = types.lines;
-      default = "";
-      description = ''
-        Additional SSH client configuration.
-        Will be appended to ~/.ssh/config (or system-wide config).
-      '';
-      example = ''
-        Host *.internal
-          StrictHostKeyChecking no
-          UserKnownHostsFile /dev/null
-      '';
     };
   };
 
-  config = mkIf cfg.enable {
-    programs.ssh = {
-      extraConfig = ''
-        ${lib.optionalString (!cfg.forwardAgent) ''
-          # Disable agent forwarding by default (security)
-          ForwardAgent no
-        ''}
+  config = mkMerge [
+    {
+      home-manager.sharedModules = [ sshHomeModule ];
+    }
 
-        ${lib.optionalString cfg.forwardAgent ''
-          # Enable agent forwarding
-          ForwardAgent yes
-        ''}
+    (mkIf anyEnabled {
+      # System-wide SSH client configuration
+      programs.ssh = {
+        startAgent = false; # SSH agent provided by desktop environment
 
-        ${lib.optionalString cfg.hashKnownHosts ''
-          # Hash known hosts for privacy
+        # System-wide SSH client defaults
+        extraConfig = ''
+          # Use modern key exchange algorithms
+          KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
+
+          # Use modern ciphers
+          Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+
+          # Use modern MACs
+          MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
+
+          # Prefer modern host key algorithms
+          HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,rsa-sha2-512,rsa-sha2-256
+
+          # Security hardening
           HashKnownHosts yes
-        ''}
+          StrictHostKeyChecking ask
+          VerifyHostKeyDNS ask
+        '';
+      };
 
-        ${lib.optionalString cfg.keepAlive.enable ''
-          # Connection keep-alive
-          ServerAliveInterval ${toString cfg.keepAlive.interval}
-          ServerAliveCountMax ${toString cfg.keepAlive.countMax}
-        ''}
+      # Ensure SSH package is available system-wide
+      environment.systemPackages = [ pkgs.openssh ];
+    })
 
-        ${lib.optionalString cfg.multiplexing.enable ''
-          # Connection multiplexing
-          ControlMaster auto
-          ControlPath ${cfg.multiplexing.controlPath}
-          ControlPersist ${cfg.multiplexing.controlPersist}
-        ''}
+    # Persist user .ssh directories and system /etc/ssh
+    (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
+      domains.storage.btrfs.preservation.mounts."/persist" = {
+        # User SSH directories
+        users = mapAttrs (username: _: {
+          directories = [
+            ".ssh"
+          ];
+        }) enabledUsers;
 
-        ${cfg.extraConfig}
-      '';
-    };
+        # System SSH directory (for host keys used by SOPS and optionally sshd)
+        directories = [
+          {
+            directory = "/etc/ssh";
+            inInitrd = true; # SSH host keys needed for SOPS decryption in initrd
+          }
+        ];
+      };
+    })
 
-    domains.storage.btrfs.preservation.mounts = mkIf preservationEnabled {
-      "/persist".users = mapAttrs (username: _: {
-        directories = [ ".ssh" ];
-      }) normalUsers;
-    };
-  };
+    # SSH Server configuration
+    (mkIf cfg.server.enable {
+      services.openssh = {
+        enable = true;
+        ports = [ cfg.server.port ];
+        settings = {
+          PermitRootLogin = cfg.server.permitRootLogin;
+          PasswordAuthentication = cfg.server.passwordAuthentication;
+        };
+      };
+    })
+  ];
 }

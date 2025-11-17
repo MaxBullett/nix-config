@@ -106,10 +106,6 @@ in
         enable = true;
         allowPowerCommands = true;
       };
-      ssh = {
-        enable = true;
-        multiplexing.enable = true;
-      };
     };
     boot = {
       plymouth.enable = true;
@@ -129,7 +125,6 @@ in
           "/persist" = {
             neededForBoot = true;
             directories = [
-              "/etc/ssh"
               "/etc/asusd"
               {
                 directory = "/var/lib/nixos";
