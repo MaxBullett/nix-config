@@ -47,13 +47,19 @@ let
           profiles.default = {
             id = 0;
             isDefault = true;
-            settings = mkIf cfg.enableHardwareAcceleration {
-              "media.ffmpeg.vaapi.enabled" = true;
-              "media.hardware-video-decoding.force-enabled" = true;
-              "media.rdd-ffmpeg.enabled" = true;
-              "widget.dmabuf.force-enabled" = true;
-              "gfx.webrender.all" = true;
-            };
+            settings = mkMerge [
+              (mkIf cfg.enableHardwareAcceleration {
+                "media.ffmpeg.vaapi.enabled" = true;
+                "media.hardware-video-decoding.force-enabled" = true;
+                "media.rdd-ffmpeg.enabled" = true;
+                "widget.dmabuf.force-enabled" = true;
+                "gfx.webrender.all" = true;
+              })
+              {
+                # Use system certificate store
+                "security.enterprise_roots.enabled" = true;
+              }
+            ];
           };
         };
 
