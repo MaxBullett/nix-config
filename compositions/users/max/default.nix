@@ -133,7 +133,7 @@ mkMerge [
           firefox.enable = true;
           steam = {
             enable = true;
-            extraCompatPackages = with pkgs; [ proton-ge-bin ];
+            extraCompatPackages = [ pkgs.proton-ge-bin ];
           };
           obs-studio = {
             enable = true;
