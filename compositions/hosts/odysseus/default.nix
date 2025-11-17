@@ -17,7 +17,10 @@ in
     "passwords/root" = {
       neededForUsers = true;
     };
-    "cachix-token" = { };
+    "cachix-token" = {
+      mode = "0440";
+      group = "nixbld";
+    };
     "github-token" = {
       mode = "0400";
     };

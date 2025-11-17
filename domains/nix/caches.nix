@@ -40,6 +40,11 @@ let
   ];
 
   allCaches = defaultCaches ++ cfg.extraCaches;
+
+  # Public caches to check (excludes personal cache to avoid redundant checks)
+  publicCaches = lib.filter (
+    cache: cache.url != "https://${cfg.push.cacheName}.cachix.org"
+  ) allCaches;
 in
 {
   options.domains.nix.caches = {
@@ -89,11 +94,12 @@ in
 
       skipCaches = mkOption {
         type = types.listOf types.str;
-        default = [ "https://cache.nixos.org" ] ++ (map (cache: cache.url) allCaches);
-        defaultText = lib.literalExpression ''[ "https://cache.nixos.org" ] ++ (all configured caches)'';
+        default = [ "https://cache.nixos.org" ] ++ (map (cache: cache.url) publicCaches);
+        defaultText = lib.literalExpression ''[ "https://cache.nixos.org" ] ++ (public caches, excluding personal cache)'';
         description = ''
-          Don't push paths that exist in these caches.
-          Defaults to all configured caches plus cache.nixos.org.
+          Public caches to check before pushing.
+          If a path exists in any of these caches, skip pushing (it's already publicly available).
+          Defaults to cache.nixos.org and all configured caches except your personal one.
         '';
       };
     };
@@ -121,55 +127,62 @@ in
       ];
 
       nix.settings.post-build-hook = pkgs.writeShellScript "cachix-push-smart" ''
-        set -euo pipefail
+        set -eu
         export PATH="${
           lib.makeBinPath [
             pkgs.cachix
             pkgs.nix
+            pkgs.coreutils
           ]
         }"
 
-        # Read cachix token
+        echo "[$(date)] post-build-hook: Starting..." >&2
+
+        # Validate and read cachix token
+        if [ ! -r ${lib.escapeShellArg cfg.push.tokenFile} ]; then
+          echo "ERROR: Cannot read token file ${lib.escapeShellArg cfg.push.tokenFile}" >&2
+          exit 1
+        fi
+
         export CACHIX_AUTH_TOKEN="$(cat ${lib.escapeShellArg cfg.push.tokenFile})"
+        if [ -z "$CACHIX_AUTH_TOKEN" ]; then
+          echo "ERROR: Token file is empty!" >&2
+          exit 1
+        fi
 
-        # Skip caches to check
-        skip_caches=(${lib.concatMapStringsSep " " lib.escapeShellArg cfg.push.skipCaches})
+        # Check if OUT_PATHS is set
+        if [ -z "''${OUT_PATHS:-}" ]; then
+          echo "WARNING: OUT_PATHS is not set, nothing to push" >&2
+          exit 0
+        fi
 
-        echo "post-build-hook: Checking built paths for uniqueness..."
+        # Public caches to check before pushing
+        public_caches=(${lib.concatMapStringsSep " " lib.escapeShellArg cfg.push.skipCaches})
 
         # For each built path
         for out_path in $OUT_PATHS; do
-          found=false
+          found_in_public_cache=false
 
-          # Get all dependencies (thorough check)
-          echo "  Checking $out_path and its dependencies..."
-          deps=$(nix-store --query --requisites "$out_path" || echo "")
-
-          if [ -z "$deps" ]; then
-            echo "  Warning: Could not query dependencies for $out_path"
-            continue
-          fi
-
-          # Check if any dependency exists in skip caches
-          for dep in $deps; do
-            for cache in "''${skip_caches[@]}"; do
-              if nix path-info --store "$cache" "$dep" &>/dev/null; then
-                echo "  Found dependency $dep in $cache, skipping push"
-                found=true
-                break 2
-              fi
-            done
+          # Check if output path exists in any public cache
+          for cache in "''${public_caches[@]}"; do
+            if timeout 5 nix path-info --store "$cache" "$out_path" &>/dev/null; then
+              found_in_public_cache=true
+              break
+            fi
           done
 
-          # Only push if not found in any skip cache
-          if [ "$found" = false ]; then
-            echo "  Path $out_path is unique! Pushing to ${cfg.push.cacheName}..."
-            cachix push ${lib.escapeShellArg cfg.push.cacheName} "$out_path"
-            echo "  Successfully pushed $out_path"
+          # Only push if not found in public caches (means we built it locally)
+          if [ "$found_in_public_cache" = false ]; then
+            echo "Pushing locally built path to ${cfg.push.cacheName}: $out_path" >&2
+            if cachix push ${lib.escapeShellArg cfg.push.cacheName} "$out_path"; then
+              echo "Successfully pushed $out_path" >&2
+            else
+              echo "ERROR: Failed to push $out_path" >&2
+            fi
           fi
         done
 
-        echo "post-build-hook: Complete"
+        echo "[$(date)] post-build-hook: Complete"
       '';
     })
   ];
