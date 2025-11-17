@@ -158,6 +158,15 @@ in
         assertion = cfg.remote.enable -> cfg.remote.passwordFile != null;
         message = "domains.storage.btrfs.snapshots.remote.passwordFile must be set when remote backups are enabled";
       }
+      {
+        assertion =
+          let
+            isB2Repository = cfg.remote.enable && (lib.hasPrefix "b2:" cfg.remote.repository);
+            hasB2Credentials = cfg.remote.b2KeyId != null && cfg.remote.b2ApplicationKey != null;
+          in
+          isB2Repository -> hasB2Credentials;
+        message = "domains.storage.btrfs.snapshots.remote.b2KeyId and b2ApplicationKey must be set when using a B2 repository";
+      }
     ];
 
     environment.systemPackages = [ pkgs.btrbk ];
@@ -210,7 +219,7 @@ in
       preserve = {
         inherit (cfg.remote) repository passwordFile;
 
-        paths = [ "${cfg.snapshotPath}" ];
+        paths = [ cfg.snapshotPath ];
 
         timerConfig = {
           OnCalendar = cfg.remote.schedule;
@@ -228,16 +237,52 @@ in
             "--keep-yearly ${toString retention.yearly}"
           ];
 
-        backupPrepareCommand = mkIf (cfg.remote.b2KeyId != null && cfg.remote.b2ApplicationKey != null) ''
-          export B2_ACCOUNT_ID="$(cat ${cfg.remote.b2KeyId})"
-          export B2_ACCOUNT_KEY="$(cat ${cfg.remote.b2ApplicationKey})"
-        '';
-
         extraBackupArgs = [
           "--exclude-caches"
           "--one-file-system"
         ];
-      };
+      }
+      // (
+        if cfg.remote.b2KeyId != null && cfg.remote.b2ApplicationKey != null then
+          {
+            package = pkgs.writeShellScriptBin "restic" ''
+              set -euo pipefail
+
+              # Validate that secret files exist and are readable
+              if [[ ! -f "${cfg.remote.b2KeyId}" ]]; then
+                echo "Error: B2 key ID file not found: ${cfg.remote.b2KeyId}" >&2
+                exit 1
+              fi
+
+              if [[ ! -f "${cfg.remote.b2ApplicationKey}" ]]; then
+                echo "Error: B2 application key file not found: ${cfg.remote.b2ApplicationKey}" >&2
+                exit 1
+              fi
+
+              # Read credentials from secret files
+              B2_ACCOUNT_ID="$(cat ${cfg.remote.b2KeyId})"
+              B2_ACCOUNT_KEY="$(cat ${cfg.remote.b2ApplicationKey})"
+
+              # Validate that credentials are not empty
+              if [[ -z "$B2_ACCOUNT_ID" ]]; then
+                echo "Error: B2_ACCOUNT_ID is empty" >&2
+                exit 1
+              fi
+
+              if [[ -z "$B2_ACCOUNT_KEY" ]]; then
+                echo "Error: B2_ACCOUNT_KEY is empty" >&2
+                exit 1
+              fi
+
+              # Export credentials and execute restic
+              export B2_ACCOUNT_ID
+              export B2_ACCOUNT_KEY
+              exec ${pkgs.restic}/bin/restic "$@"
+            '';
+          }
+        else
+          { }
+      );
     };
   };
 }
