@@ -161,10 +161,6 @@ mkMerge [
       home = {
         username = userName;
         homeDirectory = "/home/${userName}";
-        packages = with pkgs; [
-          htop
-          jq
-        ];
         stateVersion = "25.05";
       };
     };
