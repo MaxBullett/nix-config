@@ -50,6 +50,8 @@ in
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
+    backupFileExtension = "old";
+    overwriteBackup = true;
   };
 
   domains = {
