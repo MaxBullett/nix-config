@@ -18,6 +18,9 @@ in
       neededForUsers = true;
     };
     "cachix-token" = { };
+    "github-token" = {
+      mode = "0400";
+    };
     "ca-certs/daadev" = { };
     "restic" = {
       mode = "0400";
@@ -64,6 +67,7 @@ in
       daemon = {
         builders-use-substitutes = true;
         download-buffer-size = 500 * 1024 * 1024; # 500MB
+        githubTokenFile = config.sops.secrets."github-token".path;
       };
       nh = {
         enable = true;

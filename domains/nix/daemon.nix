@@ -22,6 +22,17 @@ in
       description = "Enable flakes and the unified nix command.";
     };
 
+    githubTokenFile = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = ''
+        Path to file containing GitHub Personal Access Token.
+        Avoids rate limiting when fetching flake inputs from GitHub.
+        Create at: https://github.com/settings/tokens (no scopes needed for public repos)
+      '';
+      example = "/run/secrets/github-token";
+    };
+
     auto-optimise-store = mkOption {
       type = types.bool;
       default = true;
@@ -92,35 +103,53 @@ in
     };
   };
 
-  config = {
-    nix = {
-      package = mkDefault pkgs.nix;
+  config = lib.mkMerge [
+    {
+      nix = {
+        package = mkDefault pkgs.nix;
 
-      settings = {
-        experimental-features = mkIf cfg.flakes [
-          "nix-command"
-          "flakes"
-        ];
+        settings = {
+          experimental-features = mkIf cfg.flakes [
+            "nix-command"
+            "flakes"
+          ];
 
-        inherit (cfg)
-          auto-optimise-store
-          max-jobs
-          cores
-          builders-use-substitutes
-          download-buffer-size
-          trusted-users
-          ;
+          inherit (cfg)
+            auto-optimise-store
+            max-jobs
+            cores
+            builders-use-substitutes
+            download-buffer-size
+            trusted-users
+            ;
 
-        warn-dirty = mkDefault false;
-        http-connections = mkDefault 50;
-        keep-outputs = true;
-        keep-derivations = true;
+          warn-dirty = mkDefault false;
+          http-connections = mkDefault 50;
+          keep-outputs = true;
+          keep-derivations = true;
+        };
+
+        gc = mkIf cfg.gc.automatic {
+          automatic = true;
+          inherit (cfg.gc) dates options;
+        };
       };
+    }
 
-      gc = mkIf cfg.gc.automatic {
-        automatic = true;
-        inherit (cfg.gc) dates options;
-      };
-    };
-  };
+    (mkIf (cfg.githubTokenFile != null) {
+      # Create .netrc file for GitHub authentication
+      # Nix automatically uses ~/.netrc when fetching from GitHub
+      system.activationScripts.setup-github-netrc = lib.stringAfter [ "setupSecrets" ] ''
+        if [ -f ${cfg.githubTokenFile} ]; then
+          install -d -m 0755 /root
+          (
+            echo "machine github.com"
+            echo "  login token"
+            echo "  password $(cat ${cfg.githubTokenFile})"
+          ) > /root/.netrc
+          chmod 0600 /root/.netrc
+        fi
+      '';
+    })
+  ];
 }
