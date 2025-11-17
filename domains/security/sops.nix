@@ -1,7 +1,8 @@
 {
-  lib,
-  inputs,
   config,
+  inputs,
+  lib,
+  pkgs,
   ...
 }:
 let
@@ -25,6 +26,8 @@ in
 
   options.domains.security.sops = {
     enable = mkEnableOption "sops-nix integration for host and user secrets";
+
+    installCli = mkEnableOption "sops CLI tool for encrypting/decrypting secrets";
 
     sshKeyPaths = mkOption {
       type = types.listOf types.str;
@@ -50,6 +53,8 @@ in
         generateKey = true;
       };
     };
+
+    environment.systemPackages = mkIf cfg.installCli (with pkgs; [ sops ]);
 
     domains.storage.btrfs.preservation.mounts = mkIf preservationEnabled {
       "/persist".users = mapAttrs (username: _: {
