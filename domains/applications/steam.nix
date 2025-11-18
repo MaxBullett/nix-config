@@ -1,11 +1,11 @@
 {
   config,
+  l,
   lib,
   ...
 }:
 let
   inherit (lib)
-    filterAttrs
     mapAttrs
     mkEnableOption
     mkIf
@@ -14,42 +14,14 @@ let
     types
     ;
 
-  enabledUsers = filterAttrs (
-    _: userCfg: userCfg.domains.applications.steam.enable or false
-  ) config.home-manager.users;
+  cfg = config.domains.applications.steam;
 
-  anyEnabled = enabledUsers != { };
-
-  steamHomeModule =
-    { config, ... }:
-    let
-      cfg = config.domains.applications.steam;
-    in
-    {
-      options.domains.applications.steam = {
-        enable = mkEnableOption "Steam gaming platform";
-
-        extraCompatPackages = mkOption {
-          type = with types; listOf package;
-          default = [ ];
-          example = lib.literalExpression "[ pkgs.proton-ge-bin ]";
-          description = ''
-            Additional compatibility tool packages (e.g., Proton GE).
-            These are available in Steam's compatibility tools list.
-          '';
-        };
-      };
-
-      config = mkIf cfg.enable {
-        # Per-user Steam configuration can be added here if needed
-        # Most Steam config is handled at the system level
-      };
-    };
-
-  cfg = config.domains.applications.steam or { };
+  normalUsers = l.getNormalUsers config;
 in
 {
   options.domains.applications.steam = {
+    enable = mkEnableOption "Steam gaming platform";
+
     remotePlay = {
       openFirewall = mkOption {
         type = types.bool;
@@ -88,18 +60,14 @@ in
       default = [ ];
       example = lib.literalExpression "[ pkgs.proton-ge-bin ]";
       description = ''
-        System-wide additional compatibility tool packages (e.g., Proton GE).
-        These will be available in Steam's compatibility tools list for all users.
+        Additional compatibility tool packages (e.g., Proton GE).
+        These will be available in Steam's compatibility tools list.
       '';
     };
   };
 
   config = mkMerge [
-    {
-      home-manager.sharedModules = [ steamHomeModule ];
-    }
-
-    (mkIf anyEnabled {
+    (mkIf cfg.enable {
       programs = {
         steam = {
           enable = true;
@@ -119,7 +87,7 @@ in
       };
     })
 
-    (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
+    (mkIf (cfg.enable && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/persist" = {
         users = mapAttrs (username: _: {
           directories = [
@@ -128,7 +96,7 @@ in
             # Steam configuration and cached metadata
             ".steam"
           ];
-        }) enabledUsers;
+        }) normalUsers;
       };
     })
   ];

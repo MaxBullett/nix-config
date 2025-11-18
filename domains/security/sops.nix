@@ -1,13 +1,13 @@
 {
   config,
   inputs,
+  l,
   lib,
   pkgs,
   ...
 }:
 let
   inherit (lib)
-    filterAttrs
     mapAttrs
     mkEnableOption
     mkOption
@@ -19,7 +19,7 @@ let
 
   preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
 
-  normalUsers = filterAttrs (_: user: user.isNormalUser or false) config.users.users;
+  normalUsers = l.getNormalUsers config;
 in
 {
   imports = [ inputs.sops-nix.nixosModules.sops ];

@@ -19,6 +19,9 @@ rec {
   # Returns path relative to flake root
   relativeToRoot = path: self + "/${path}";
 
+  # Get all normal (non-system) users from config
+  getNormalUsers = config: filterAttrs (_: user: user.isNormalUser or false) config.users.users;
+
   # Discover domain modules based on repository layout
   domainModulePaths =
     let

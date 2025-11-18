@@ -2,6 +2,7 @@
   config,
   hostName ? "odysseus",
   l,
+  pkgs,
   ...
 }:
 let
@@ -195,6 +196,10 @@ in
         polarity = "dark";
         wallpaper = ./wallpaper.jpg;
       };
+    };
+    applications.steam = {
+      enable = true;
+      extraCompatPackages = with pkgs; [ proton-ge-bin ];
     };
     development.docker.enable = true;
   };

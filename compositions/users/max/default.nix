@@ -2,7 +2,6 @@
   config,
   inputs,
   lib,
-  pkgs,
   ...
 }:
 let
@@ -143,10 +142,6 @@ mkMerge [
 
         applications = {
           firefox.enable = true;
-          steam = {
-            enable = true;
-            extraCompatPackages = [ pkgs.proton-ge-bin ];
-          };
           obs-studio = {
             enable = true;
             enableVirtualCamera = true;

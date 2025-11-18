@@ -1,11 +1,11 @@
 {
   config,
+  l,
   lib,
   ...
 }:
 let
   inherit (lib)
-    filterAttrs
     mapAttrs
     mkEnableOption
     mkIf
@@ -15,7 +15,7 @@ let
     ;
   cfg = config.domains.audio.pipewire;
 
-  normalUsers = filterAttrs (_: user: user.isNormalUser or false) config.users.users;
+  normalUsers = l.getNormalUsers config;
 
   preservationEnabled = config.domains.storage.btrfs.preservation.enable or false;
 in
