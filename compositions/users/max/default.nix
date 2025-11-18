@@ -171,13 +171,19 @@ mkMerge [
     domains.storage.btrfs.preservation.mounts = {
       "/persist".users.${userName} = {
         directories = [
-          "code"
+          {
+            directory = "code";
+            how = "symlink";
+          }
         ];
         files = [ ];
       };
       "/preserve".users.${userName} = {
         directories = [
-          "work"
+          {
+            directory = "work";
+            how = "symlink";
+          }
         ];
         files = [ ];
       };

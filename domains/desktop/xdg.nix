@@ -213,8 +213,11 @@ in
                 # Filter for directories assigned to this mount point
                 dirsForThisMount = lib.filter (dir: dir != null && dir.mountPoint == mountPoint) allDirs;
 
-                # Extract the paths
-                dirPaths = map (dir: dir.path) dirsForThisMount;
+                # Convert to preservation format with symlinks to avoid mount points
+                dirPaths = map (dir: {
+                  directory = dir.path;
+                  how = "symlink";
+                }) dirsForThisMount;
               in
               dirPaths;
           }) enabledUsers;
