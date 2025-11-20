@@ -85,8 +85,12 @@ in
       systemd.services.flatpak-managed-install = {
         description = "Install declarative Flatpak packages";
         wantedBy = [ "multi-user.target" ];
-        after = [ "network-online.target" ];
+        after = [
+          "network-online.target"
+          "nss-lookup.target"
+        ];
         wants = [ "network-online.target" ];
+        requires = [ "network-online.target" ];
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;

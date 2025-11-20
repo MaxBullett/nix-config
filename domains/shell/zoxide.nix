@@ -33,6 +33,12 @@ let
       };
 
       config = mkIf cfg.enable {
+        programs.zoxide = {
+          enable = true;
+          enableNushellIntegration = config.domains.shell.nushell.enable or false;
+        };
+
+        # Install zoxide in home.packages to ensure it's available when nushell starts
         home.packages = [ pkgs.zoxide ];
       };
     };
@@ -42,10 +48,6 @@ in
     {
       home-manager.sharedModules = [ zoxideHomeModule ];
     }
-
-    (mkIf anyEnabled {
-      environment.systemPackages = [ pkgs.zoxide ];
-    })
 
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/persist" = {

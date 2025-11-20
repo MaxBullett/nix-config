@@ -40,20 +40,38 @@ let
         };
       };
 
-      config = mkIf cfg.enable {
-        # Install yazi and useful optional dependencies
-        home.packages = with pkgs; [
-          yazi
-          # Optional dependencies for better functionality
-          ffmpegthumbnailer # Video thumbnails
-          unar # Archive preview
-          jq # JSON preview
-          poppler-utils # PDF preview
-          fd # File searching
-          ripgrep # Content searching
-          fzf # Fuzzy finding
-        ];
-      };
+      config = mkIf cfg.enable (mkMerge [
+        {
+          # Install yazi and useful optional dependencies
+          home.packages = with pkgs; [
+            yazi
+            # Optional dependencies for better functionality
+            ffmpegthumbnailer # Video thumbnails
+            unar # Archive preview
+            jq # JSON preview
+            poppler-utils # PDF preview
+            fd # File searching
+            ripgrep # Content searching
+            fzf # Fuzzy finding
+          ];
+        }
+
+        # Nushell integration: cd-on-quit wrapper
+        (mkIf (config.domains.shell.nushell.enable or false) {
+          programs.nushell.extraEnv = ''
+            # Yazi wrapper for cd-on-quit
+            def --env ${cfg.wrapperName} [...args] {
+              let tmp = (mktemp -t "yazi-cwd.XXXXXX")
+              yazi ...$args --cwd-file $tmp
+              let cwd = (open $tmp)
+              if $cwd != "" and $cwd != $env.PWD {
+                cd $cwd
+              }
+              rm -f $tmp
+            }
+          '';
+        })
+      ]);
     };
 in
 {

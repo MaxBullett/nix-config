@@ -33,6 +33,12 @@ let
       };
 
       config = mkIf cfg.enable {
+        programs.carapace = {
+          enable = true;
+          enableNushellIntegration = config.domains.shell.nushell.enable or false;
+        };
+
+        # Install carapace in home.packages to ensure it's available when nushell starts
         home.packages = [ pkgs.carapace ];
       };
     };
@@ -42,10 +48,6 @@ in
     {
       home-manager.sharedModules = [ carapaceHomeModule ];
     }
-
-    (mkIf anyEnabled {
-      environment.systemPackages = [ pkgs.carapace ];
-    })
 
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/persist" = {

@@ -103,7 +103,11 @@ let
         programs.starship = {
           enable = true;
           inherit (cfg) settings;
+          enableNushellIntegration = config.domains.shell.nushell.enable or false;
         };
+
+        # Install starship in home.packages to ensure it's available when nushell starts
+        home.packages = [ pkgs.starship ];
       };
     };
 in
@@ -112,10 +116,6 @@ in
     {
       home-manager.sharedModules = [ starshipHomeModule ];
     }
-
-    (mkIf anyEnabled {
-      environment.systemPackages = [ pkgs.starship ];
-    })
 
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
       domains.storage.btrfs.preservation.mounts."/persist" = {

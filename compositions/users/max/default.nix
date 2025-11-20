@@ -28,6 +28,16 @@ mkMerge [
         mode = "0644";
         owner = userName;
       };
+      "atuin/key" = {
+        sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
+        mode = "0600";
+        owner = userName;
+      };
+      "atuin/session" = {
+        sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
+        mode = "0600";
+        owner = userName;
+      };
     };
 
     users.users.${userName} = {
@@ -45,17 +55,18 @@ mkMerge [
         shell = {
           nushell = {
             enable = true;
-            shellAliases = {
-              ll = "ls -l";
-              la = "ls -la";
-              ".." = "cd ..";
-              "..." = "cd ../..";
-            };
           };
           starship.enable = true;
-          zoxide.enable = true;
-          atuin.enable = true;
+          atuin = {
+            enable = true;
+            sync = {
+              enable = true;
+              keyFile = config.sops.secrets."atuin/key".path;
+              sessionFile = config.sops.secrets."atuin/session".path;
+            };
+          };
           carapace.enable = true;
+          zoxide.enable = true;
         };
 
         editors.helix.enable = true;
@@ -65,6 +76,11 @@ mkMerge [
             enable = true;
             matchBlocks = {
               "github.com" = {
+                identityFile = "~/.ssh/id_ed25519";
+                identitiesOnly = true;
+              };
+              "daa-db3" = {
+                hostname = "78.46.94.214";
                 identityFile = "~/.ssh/id_ed25519";
                 identitiesOnly = true;
               };
@@ -93,6 +109,7 @@ mkMerge [
             dataspell.enable = true;
             ideaUltimate.enable = true;
           };
+          python.enable = true;
         };
 
         tools = {
