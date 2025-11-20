@@ -167,6 +167,7 @@ mkMerge [
             enable = true;
             betaPackages = [ "com.stremio.Stremio" ];
           };
+          proton-pass.enable = true;
         };
       };
 
