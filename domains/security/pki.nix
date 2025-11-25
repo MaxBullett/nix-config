@@ -43,6 +43,11 @@ in
       }
     ];
 
+    # Install p11-kit to enable Firefox to use system certificates
+    environment.systemPackages = with pkgs; [
+      p11-kit
+    ];
+
     systemd.services.install-custom-ca-certs = {
       description = "Install custom CA certificates to system trust store";
       wantedBy = [ "multi-user.target" ];
