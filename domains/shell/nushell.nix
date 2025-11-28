@@ -68,6 +68,7 @@ let
             # Basic configuration
             $env.config = {
               show_banner: false
+              rm: {always_trash: true}
               use_kitty_protocol: true
 
               table: {
@@ -87,11 +88,6 @@ let
                 file_format: "sqlite"
               }
             }
-
-            $env.PATH = ($env.PATH |
-              split row (char esep) |
-              append /usr/bin/env
-            )
 
             # Common ls aliases and sort them by type and then name
             # Inspired by https://github.com/nushell/nushell/issues/7190
@@ -118,7 +114,7 @@ let
 
         home.packages = defaultPlugins;
 
-        # Configure bash to exec into nushell for interactive sessions
+        # Configure bash to start nushell for interactive sessions
         # Nushell is not POSIX-compliant and should not be used as a login shell
         # See: https://wiki.nixos.org/wiki/Nushell
         programs.bash = {

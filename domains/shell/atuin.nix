@@ -71,7 +71,7 @@ let
                 # Search settings
                 search_mode = "fuzzy";
                 filter_mode = "global";
-                style = "compact";
+                enter_accept = true;
 
                 # Sync settings
                 auto_sync = cfg.sync.enable;
@@ -82,6 +82,7 @@ let
                 dialect = "uk";
                 inline_height = 20;
                 show_preview = true;
+                style = "compact";
 
                 # History settings
                 update_check = false;
