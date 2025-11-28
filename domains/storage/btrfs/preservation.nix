@@ -75,6 +75,7 @@ let
     lib.filterAttrs (_: v: v != [ ] && v != { }) {
       inherit (mountCfg) persistentStoragePath directories files;
       users = mapAttrs (_: userCfg: {
+        commonMountOptions = [ "x-gvfs-hide" ];
         inherit (userCfg) directories files;
       }) mountCfg.users;
     };

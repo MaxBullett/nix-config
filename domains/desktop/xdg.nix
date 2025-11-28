@@ -216,7 +216,6 @@ in
                 # Convert to preservation format with symlinks to avoid mount points
                 dirPaths = map (dir: {
                   directory = dir.path;
-                  how = "symlink";
                 }) dirsForThisMount;
               in
               dirPaths;
