@@ -124,6 +124,9 @@ in
 
             # Pop Launcher (app launcher) history and preferences
             ".local/state/pop-launcher"
+
+            # Included keyring state
+            ".local/share/keyring"
           ];
         }) normalUsers;
       };
