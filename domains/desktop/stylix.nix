@@ -15,6 +15,11 @@ let
     ;
 
   cfg = config.domains.desktop.stylix;
+
+  # Home Manager module for Stylix release checks
+  stylixHomeModule = {
+    stylix.enableReleaseChecks = false;
+  };
 in
 {
   imports = [ inputs.stylix.nixosModules.stylix ];
@@ -145,61 +150,71 @@ in
     };
   };
 
-  config = mkIf cfg.enable {
-    fonts = {
-      fontconfig.enable = true;
+  config = mkMerge [
+    {
+      # Disable Stylix release checks in Home Manager for nixos-unstable users
+      home-manager.sharedModules = [ stylixHomeModule ];
+    }
 
-      packages = with pkgs; [
-        # Configured fonts
-        cfg.fonts.monospace.package
-        cfg.fonts.sansSerif.package
-        cfg.fonts.serif.package
-        cfg.fonts.emoji.package
+    (mkIf cfg.enable {
+      fonts = {
+        fontconfig.enable = true;
 
-        # Additional monospaced fonts with programming ligatures
-        nerd-fonts.fira-code
-        nerd-fonts.symbols-only
+        packages = with pkgs; [
+          # Configured fonts
+          cfg.fonts.monospace.package
+          cfg.fonts.sansSerif.package
+          cfg.fonts.serif.package
+          cfg.fonts.emoji.package
 
-        # Additional general purpose fonts
-        noto-fonts-cjk-sans
-        noto-fonts-cjk-serif
+          # Additional monospaced fonts with programming ligatures
+          nerd-fonts.fira-code
+          nerd-fonts.symbols-only
 
-        # Icon fonts
-        font-awesome
-        material-design-icons
+          # Additional general purpose fonts
+          noto-fonts-cjk-sans
+          noto-fonts-cjk-serif
+
+          # Icon fonts
+          font-awesome
+          material-design-icons
+        ];
+      };
+
+      stylix = mkMerge [
+        {
+          enable = true;
+          # Disable release checks when using nixos-unstable
+          # Stylix's version checking is not compatible with rolling releases
+          enableReleaseChecks = false;
+          base16Scheme = "${pkgs.base16-schemes}/share/themes/${cfg.scheme}.yaml";
+          inherit (cfg) polarity;
+
+          fonts = {
+            monospace = {
+              inherit (cfg.fonts.monospace) package name;
+            };
+            sansSerif = {
+              inherit (cfg.fonts.sansSerif) package name;
+            };
+            serif = {
+              inherit (cfg.fonts.serif) package name;
+            };
+            emoji = {
+              inherit (cfg.fonts.emoji) package name;
+            };
+            sizes = {
+              inherit (cfg.fonts.sizes)
+                applications
+                terminal
+                desktop
+                popups
+                ;
+            };
+          };
+        }
+        (mkIf (cfg.wallpaper != null) { image = cfg.wallpaper; })
       ];
-    };
-
-    stylix = mkMerge [
-      {
-        enable = true;
-        base16Scheme = "${pkgs.base16-schemes}/share/themes/${cfg.scheme}.yaml";
-        inherit (cfg) polarity;
-
-        fonts = {
-          monospace = {
-            inherit (cfg.fonts.monospace) package name;
-          };
-          sansSerif = {
-            inherit (cfg.fonts.sansSerif) package name;
-          };
-          serif = {
-            inherit (cfg.fonts.serif) package name;
-          };
-          emoji = {
-            inherit (cfg.fonts.emoji) package name;
-          };
-          sizes = {
-            inherit (cfg.fonts.sizes)
-              applications
-              terminal
-              desktop
-              popups
-              ;
-          };
-        };
-      }
-      (mkIf (cfg.wallpaper != null) { image = cfg.wallpaper; })
-    ];
-  };
+    })
+  ];
 }

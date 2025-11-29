@@ -33,7 +33,7 @@
 
     # Stylix theming framework (https://nix-community.github.io/stylix/)
     stylix = {
-      url = "github:nix-community/stylix";
+      url = "github:nix-community/stylix/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -45,6 +45,9 @@
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Declarative flatpak management (https://github.com/gmodena/nix-flatpak)
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
   };
 
   outputs =
@@ -68,7 +71,7 @@
       checks = forAllSystems (
         pkgs:
         let
-          system = pkgs.system or pkgs.stdenv.hostPlatform.system;
+          inherit (pkgs.stdenv.hostPlatform) system;
         in
         import ./checks.nix { inherit inputs system pkgs; }
       );
@@ -77,7 +80,7 @@
       devShells = forAllSystems (
         pkgs:
         let
-          system = pkgs.system or pkgs.stdenv.hostPlatform.system;
+          inherit (pkgs.stdenv.hostPlatform) system;
           checks = import ./checks.nix { inherit inputs system pkgs; };
         in
         {
