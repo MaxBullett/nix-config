@@ -32,9 +32,8 @@
     };
 
     # Stylix theming framework (https://nix-community.github.io/stylix/)
-    # Pinned to before opencode module was added (which has compatibility issues)
     stylix = {
-      url = "github:nix-community/stylix/8d008296a1b3be9b57ad570f7acea00dd2fc92db";
+      url = "github:nix-community/stylix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
