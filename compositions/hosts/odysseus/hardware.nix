@@ -30,11 +30,19 @@
 
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
-  # Sleep: GA402RK uses s2idle; don't force "deep" sleep mode
   systemd.sleep.extraConfig = ''
+    HibernateDefibrillatorSec=20s
     SuspendState=mem
-    SuspendMode=
+    HibernateMode=platform shutdown
+    HibernateState=disk
+    HibernateDelaySec=3600
   '';
+
+  services.logind.settings.Login = {
+    HandleLidSwitch = "suspend-then-hibernate";
+    HandleLidSwitchDocked = "suspend";
+    HandleLidSwitchExternalPower = "suspend";
+  };
 
   # Upstream issue causing asusd spam
   systemd.services.asusd.serviceConfig.LogLevelMax = "warning";
