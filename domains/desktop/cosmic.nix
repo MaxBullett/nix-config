@@ -79,18 +79,23 @@ in
         })
       ];
 
-      services.displayManager = {
-        inherit (cfg) cosmic-greeter;
+      services = {
+        displayManager = {
+          inherit (cfg) cosmic-greeter;
 
-        autoLogin = mkIf cfg.autoLogin.enable {
-          enable = true;
-          inherit (cfg.autoLogin) user;
+          autoLogin = mkIf cfg.autoLogin.enable {
+            enable = true;
+            inherit (cfg.autoLogin) user;
+          };
         };
-      };
 
-      services.desktopManager.cosmic = {
-        enable = true;
-        inherit (cfg) xwayland;
+        desktopManager.cosmic = {
+          enable = true;
+          inherit (cfg) xwayland;
+        };
+
+        # Using system76's scheduler greatly improves performance of cosmic.
+        system76-scheduler.enable = true;
       };
 
       environment.sessionVariables = {
