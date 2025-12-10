@@ -196,6 +196,11 @@ in
         polarity = "dark";
         wallpaper = ./wallpaper.jpg;
       };
+      cursors = {
+        package = pkgs.catppuccin-cursors.macchiatoSky;
+        name = "catppuccin-macchiato-sky-cursors";
+        size = 24;
+      };
     };
     applications.steam = {
       enable = true;
