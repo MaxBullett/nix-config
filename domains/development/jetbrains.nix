@@ -33,7 +33,7 @@ let
 
       selectedIDEs = lib.flatten [
         (lib.optional cfg.dataspell.enable pkgs.jetbrains.dataspell)
-        (lib.optional cfg.ideaUltimate.enable pkgs.jetbrains.idea-ultimate)
+        (lib.optional cfg.ideaUltimate.enable pkgs.jetbrains.idea)
       ];
     in
     {
