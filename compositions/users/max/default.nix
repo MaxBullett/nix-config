@@ -55,6 +55,9 @@ mkMerge [
         shell = {
           nushell = {
             enable = true;
+            shellAliases = {
+              doco = "docker compose";
+            };
           };
           starship.enable = true;
           atuin = {
