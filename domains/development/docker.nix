@@ -33,6 +33,12 @@ in
       };
 
       virtualisation.oci-containers.backend = "docker";
+
+      # Trust bridge interfaces by default
+      networking.firewall.trustedInterfaces = [
+        "docker0"
+        "br-+"
+      ];
     }
 
     (mkIf (config.domains.storage.btrfs.preservation.enable or false) {

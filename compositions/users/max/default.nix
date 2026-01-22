@@ -8,6 +8,7 @@ let
   inherit (lib) mkIf mkMerge;
   userName = "max";
   secretKey = "passwords/${userName}";
+
 in
 mkMerge [
   {
@@ -26,6 +27,11 @@ mkMerge [
         sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
         path = "/home/${userName}/.ssh/id_ed25519.pub";
         mode = "0644";
+        owner = userName;
+      };
+      "ssh/work-config" = {
+        sopsFile = "${inputs.nix-secrets}/users/${userName}/secrets.yaml";
+        mode = "0600";
         owner = userName;
       };
       "atuin/key" = {
@@ -77,13 +83,11 @@ mkMerge [
         security = {
           ssh = {
             enable = true;
+            extraConfig = ''
+              Include ${config.sops.secrets."ssh/work-config".path}
+            '';
             matchBlocks = {
               "github.com" = {
-                identityFile = "~/.ssh/id_ed25519";
-                identitiesOnly = true;
-              };
-              "daa-db3" = {
-                hostname = "78.46.94.214";
                 identityFile = "~/.ssh/id_ed25519";
                 identitiesOnly = true;
               };
