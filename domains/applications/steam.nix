@@ -95,6 +95,8 @@ in
             ".local/share/Steam"
             # Steam configuration and cached metadata
             ".steam"
+            # Game/Publisher-specific local files to potentially persist
+            ".local/share/Paradox Interactive"
           ];
         }) normalUsers;
       };
