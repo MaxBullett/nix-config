@@ -66,15 +66,24 @@ in
         }
       ];
 
-      # Patch cosmic-session to use correct gcr-ssh-agent socket path
-      # Upstream issue: https://github.com/pop-os/cosmic-session/issues/148
       nixpkgs.overlays = [
+        # Fix gcr-ssh-agent socket path
+        # Upstream issue: https://github.com/pop-os/cosmic-session/issues/148
         (final: prev: {
           cosmic-session = prev.cosmic-session.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
               substituteInPlace data/start-cosmic \
                 --replace-fail '/keyring/ssh' '/gcr/ssh'
             '';
+          });
+        })
+
+        # Smart gaps: remove gaps when only one tiled window
+        (final: prev: {
+          cosmic-comp = prev.cosmic-comp.overrideAttrs (oldAttrs: {
+            patches = (oldAttrs.patches or [ ]) ++ [
+              ./cosmic_smart_gaps.patch
+            ];
           });
         })
       ];

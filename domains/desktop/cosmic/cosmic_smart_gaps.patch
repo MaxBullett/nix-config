@@ -1,0 +1,26 @@
+diff --git a/src/shell/layout/tiling/mod.rs b/src/shell/layout/tiling/mod.rs
+index ffeeb52a..7b660a88 100644
+--- a/src/shell/layout/tiling/mod.rs
++++ b/src/shell/layout/tiling/mod.rs
+@@ -3002,7 +3002,20 @@ impl TilingLayout {
+         if let Some(root_id) = tree.root_node_id() {
+             let mut configures = Vec::new();
+
+-            let (outer, inner) = gaps;
++            // Check if there's only a single window in tiling mode
++            let mapped_count = tree
++                .traverse_pre_order(root_id)
++                .unwrap()
++                .filter(|node| node.data().is_mapped(None))
++                .count();
++
++            // If there's only one window, maximize it by removing all gaps
++            let (outer, inner) = if mapped_count == 1 {
++                (1, 0)
++            } else {
++                gaps
++            };
++
+             let mut geo = layer_map_for_output(output).non_exclusive_zone().as_local();
+             geo.loc.x += outer;
+             geo.loc.y += outer;
