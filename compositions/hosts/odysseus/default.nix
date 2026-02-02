@@ -206,7 +206,10 @@ in
       enable = true;
       extraCompatPackages = with pkgs; [ proton-ge-bin ];
     };
-    development.docker.enable = true;
+    development = {
+      ansible.enable = true;
+      docker.enable = true;
+    };
   };
 
   system.stateVersion = "25.05";
