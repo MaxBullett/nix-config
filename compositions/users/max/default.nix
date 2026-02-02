@@ -63,6 +63,8 @@ mkMerge [
             enable = true;
             shellAliases = {
               doco = "docker compose";
+              jc = "journalctl";
+              sc = "systemctl";
             };
           };
           starship.enable = true;
