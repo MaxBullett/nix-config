@@ -40,7 +40,7 @@
         };
       };
       flake-checker.enable = true;
-      nixfmt-rfc-style.enable = true;
+      nixfmt.enable = true;
       statix.enable = true;
 
       # Shell scripts

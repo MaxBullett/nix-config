@@ -65,7 +65,7 @@
     in
     {
       # Formatter (https://github.com/NixOS/nixfmt)
-      formatter = forAllSystems (pkgs: pkgs.nixfmt-rfc-style);
+      formatter = forAllSystems (pkgs: pkgs.nixfmt);
 
       # Checks
       checks = forAllSystems (

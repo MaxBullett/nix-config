@@ -44,7 +44,7 @@ nh os test
 ### Format Code
 
 ```bash
-# Format all Nix files using nixfmt-rfc-style
+# Format all Nix files using nixfmt
 nix fmt
 ```
 
@@ -58,7 +58,7 @@ nix flake check
 ```
 
 This runs:
-- **Nix checks**: deadnix, flake-checker, nixfmt-rfc-style, statix
+- **Nix checks**: deadnix, flake-checker, nixfmt, statix
 - **Shell checks**: shellcheck, shfmt
 - **General checks**: Large files, merge conflicts, private keys, trailing whitespace
 
@@ -90,7 +90,7 @@ Configured in `checks.nix`:
 **Nix:**
 - `deadnix` - Detect unused Nix code
 - `flake-checker` - Validate flake structure
-- `nixfmt-rfc-style` - Format Nix code
+- `nixfmt` - Format Nix code
 - `statix` - Lint Nix code (no deprecated patterns, etc.)
 
 **Shell:**
