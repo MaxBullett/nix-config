@@ -34,6 +34,10 @@ let
 
   defaultCaches = [
     {
+      url = "https://cache.nixos.org";
+      key = "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=";
+    }
+    {
       url = "https://nix-community.cachix.org";
       key = "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=";
     }
@@ -126,63 +130,67 @@ in
         }
       ];
 
-      nix.settings.post-build-hook = pkgs.writeShellScript "cachix-push-smart" ''
+      nix.settings.post-build-hook = pkgs.writeShellScript "cachix-push-async" ''
         set -eu
-        export PATH="${
-          lib.makeBinPath [
-            pkgs.cachix
-            pkgs.nix
-            pkgs.coreutils
-          ]
-        }"
 
-        echo "[$(date)] post-build-hook: Starting..." >&2
-
-        # Validate and read cachix token
-        if [ ! -r ${lib.escapeShellArg cfg.push.tokenFile} ]; then
-          echo "ERROR: Cannot read token file ${lib.escapeShellArg cfg.push.tokenFile}" >&2
-          exit 1
-        fi
-
-        export CACHIX_AUTH_TOKEN="$(cat ${lib.escapeShellArg cfg.push.tokenFile})"
-        if [ -z "$CACHIX_AUTH_TOKEN" ]; then
-          echo "ERROR: Token file is empty!" >&2
-          exit 1
+        # Skip pushing if NIX_SKIP_PUSH is set (useful during large updates)
+        if [ "''${NIX_SKIP_PUSH:-}" = "1" ]; then
+          exit 0
         fi
 
         # Check if OUT_PATHS is set
         if [ -z "''${OUT_PATHS:-}" ]; then
-          echo "WARNING: OUT_PATHS is not set, nothing to push" >&2
           exit 0
         fi
 
-        # Public caches to check before pushing
-        public_caches=(${lib.concatMapStringsSep " " lib.escapeShellArg cfg.push.skipCaches})
+        # Run the actual push logic asynchronously in the background
+        # This prevents blocking the build process
+        (
+          export PATH="${
+            lib.makeBinPath [
+              pkgs.cachix
+              pkgs.nix
+              pkgs.coreutils
+            ]
+          }"
 
-        # For each built path
-        for out_path in $OUT_PATHS; do
-          found_in_public_cache=false
+          # Validate and read cachix token
+          if [ ! -r ${lib.escapeShellArg cfg.push.tokenFile} ]; then
+            echo "ERROR: Cannot read token file ${lib.escapeShellArg cfg.push.tokenFile}" >&2
+            exit 1
+          fi
 
-          # Check if output path exists in any public cache
-          for cache in "''${public_caches[@]}"; do
-            if timeout 5 nix path-info --store "$cache" "$out_path" &>/dev/null; then
-              found_in_public_cache=true
-              break
+          export CACHIX_AUTH_TOKEN="$(cat ${lib.escapeShellArg cfg.push.tokenFile})"
+          if [ -z "$CACHIX_AUTH_TOKEN" ]; then
+            echo "ERROR: Token file is empty!" >&2
+            exit 1
+          fi
+
+          # Public caches to check before pushing
+          public_caches=(${lib.concatMapStringsSep " " lib.escapeShellArg cfg.push.skipCaches})
+
+          # Function to check if path exists in any public cache
+          check_public_caches() {
+            local path="$1"
+            for cache in "''${public_caches[@]}"; do
+              if timeout 2 nix path-info --store "$cache" "$path" &>/dev/null; then
+                return 0  # Found in public cache
+              fi
+            done
+            return 1  # Not found
+          }
+
+          # For each built path, check and push if needed
+          for out_path in $OUT_PATHS; do
+            if ! check_public_caches "$out_path"; then
+              echo "Pushing locally built path to ${cfg.push.cacheName}: $out_path" >&2
+              cachix push ${lib.escapeShellArg cfg.push.cacheName} "$out_path" 2>&1 || true
             fi
           done
+        ) &>/dev/null &
 
-          # Only push if not found in public caches (means we built it locally)
-          if [ "$found_in_public_cache" = false ]; then
-            echo "Pushing locally built path to ${cfg.push.cacheName}: $out_path" >&2
-            if cachix push ${lib.escapeShellArg cfg.push.cacheName} "$out_path"; then
-              echo "Successfully pushed $out_path" >&2
-            else
-              echo "ERROR: Failed to push $out_path" >&2
-            fi
-          fi
-        done
-
-        echo "[$(date)] post-build-hook: Complete"
+        # Disown the background process so the hook can exit immediately
+        disown
       '';
     })
   ];

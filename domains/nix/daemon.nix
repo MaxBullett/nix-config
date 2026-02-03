@@ -93,6 +93,24 @@ in
       '';
     };
 
+    connect-timeout = mkOption {
+      type = types.int;
+      default = 5;
+      description = ''
+        Timeout in seconds for establishing connections to binary caches.
+        Lower values prevent slow/unresponsive caches from blocking builds.
+      '';
+    };
+
+    stalled-download-timeout = mkOption {
+      type = types.int;
+      default = 300;
+      description = ''
+        Timeout in seconds for downloads that have stalled (no data received).
+        Lower values prevent hung downloads from blocking builds indefinitely.
+      '';
+    };
+
     trusted-users = mkOption {
       type = types.listOf types.str;
       default = [
@@ -120,6 +138,8 @@ in
             cores
             builders-use-substitutes
             download-buffer-size
+            connect-timeout
+            stalled-download-timeout
             trusted-users
             ;
 

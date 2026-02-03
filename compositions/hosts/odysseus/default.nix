@@ -73,6 +73,7 @@ in
       daemon = {
         builders-use-substitutes = true;
         download-buffer-size = 500 * 1024 * 1024; # 500MB
+        stalled-download-timeout = 60;
         githubTokenFile = config.sops.secrets."github-token".path;
       };
       nh = {
