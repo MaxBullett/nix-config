@@ -93,6 +93,11 @@ mkMerge [
                 identityFile = "~/.ssh/id_ed25519";
                 identitiesOnly = true;
               };
+              "10.10.10.101" = {
+                user = "root";
+                identityFile = "~/.ssh/id_ed25519";
+                identitiesOnly = true;
+              };
             };
           };
         };
