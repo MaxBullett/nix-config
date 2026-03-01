@@ -181,6 +181,7 @@ mkMerge [
             enable = true;
             betaPackages = [ "com.stremio.Stremio" ];
           };
+          figma-linux.enable = true;
           proton-pass.enable = true;
         };
       };
