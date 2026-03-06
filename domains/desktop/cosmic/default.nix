@@ -67,12 +67,9 @@ in
       ];
 
       nixpkgs.overlays = [
-        # Smart gaps: remove gaps when only one tiled window
         (final: prev: {
           cosmic-comp = prev.cosmic-comp.overrideAttrs (oldAttrs: {
-            patches = (oldAttrs.patches or [ ]) ++ [
-              ./cosmic_smart_gaps.patch
-            ];
+            patches = oldAttrs.patches or [ ]; # Concat list of patches here
           });
         })
       ];

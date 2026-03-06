@@ -30,13 +30,13 @@
 
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
-  systemd.sleep.extraConfig = ''
-    HibernateDefibrillatorSec=20s
-    SuspendState=mem
-    HibernateMode=platform shutdown
-    HibernateState=disk
-    HibernateDelaySec=3600
-  '';
+  systemd.sleep.settings.Sleep = {
+    HibernateDefibrillatorSec = "20s";
+    SuspendState = "mem";
+    HibernateMode = "platform shutdown";
+    HibernateState = "disk";
+    HibernateDelaySec = "3600";
+  };
 
   services.logind.settings.Login = {
     HandleLidSwitch = "suspend-then-hibernate";
