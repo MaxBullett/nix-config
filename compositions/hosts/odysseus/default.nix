@@ -180,6 +180,7 @@ in
     };
     peripherals.bluetooth = {
       enable = true;
+      autoSwitch = true;
       settings = {
         General.Experimental = true;
       };

@@ -24,6 +24,12 @@ in
       description = "Power on Bluetooth adapter on boot.";
     };
 
+    autoSwitch = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Automatically switch audio output to Bluetooth devices when they connect.";
+    };
+
     settings = mkOption {
       type = types.attrs;
       default = { };
@@ -59,5 +65,23 @@ in
         '';
       }
     )
+
+    # Auto-switch audio output to Bluetooth devices when they connect
+    (mkIf (cfg.autoSwitch && config.services.pipewire.wireplumber.enable or false) {
+      environment.etc."wireplumber/wireplumber.conf.d/51-bluetooth-autoswitch.conf".text = ''
+        monitor.bluez.rules = [
+          {
+            matches = [
+              { node.name = "~bluez_output.*" }
+            ]
+            actions = {
+              update-props = {
+                priority.session = 2000
+              }
+            }
+          }
+        ]
+      '';
+    })
   ]);
 }
