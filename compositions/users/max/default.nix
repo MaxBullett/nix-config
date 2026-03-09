@@ -172,7 +172,7 @@ mkMerge [
         };
 
         applications = {
-          firefox.enable = true;
+          vivaldi.enable = true;
           obs-studio = {
             enable = true;
             enableVirtualCamera = true;
