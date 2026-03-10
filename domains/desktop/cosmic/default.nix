@@ -130,7 +130,7 @@ in
             ".local/state/pop-launcher"
 
             # Included keyring state
-            ".local/share/keyring"
+            ".local/share/keyrings"
           ];
         }) normalUsers;
       };
