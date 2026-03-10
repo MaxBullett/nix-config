@@ -13,10 +13,10 @@ let
     types
     ;
 
-  cfg = config.domains.printing.cups;
+  cfg = config.domains.peripherals.cups;
 in
 {
-  options.domains.printing.cups = {
+  options.domains.peripherals.cups = {
     enable = mkEnableOption "CUPS printing system";
 
     drivers = mkOption {

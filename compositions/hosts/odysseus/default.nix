@@ -186,7 +186,7 @@ in
       };
     };
     audio.pipewire.enable = true;
-    printing.cups.enable = true;
+    peripherals.cups.enable = true;
     desktop = {
       cosmic = {
         enable = true;
