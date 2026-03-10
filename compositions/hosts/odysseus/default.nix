@@ -178,15 +178,21 @@ in
       firmware.enable = true;
       sensors.enable = true;
     };
-    peripherals.bluetooth = {
-      enable = true;
-      autoSwitch = true;
-      settings = {
-        General.Experimental = true;
+    peripherals = {
+      bluetooth = {
+        enable = true;
+        autoSwitch = true;
+        settings = {
+          General.Experimental = true;
+        };
+      };
+      cups.enable = true;
+      sane = {
+        enable = true;
+        extraBackends = with pkgs; [ epkowa ];
       };
     };
     audio.pipewire.enable = true;
-    peripherals.cups.enable = true;
     desktop = {
       cosmic = {
         enable = true;

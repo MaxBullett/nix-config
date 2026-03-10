@@ -52,6 +52,7 @@ mkMerge [
         "wheel"
         (lib.optional (config.networking.networkmanager.enable or false) "networkmanager")
         (lib.optional (config.virtualisation.docker.enable or false) "docker")
+        (lib.optional (config.hardware.sane.enable or false) "scanner")
       ];
       hashedPasswordFile = config.sops.secrets."${secretKey}".path;
     };
