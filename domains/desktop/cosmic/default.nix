@@ -69,7 +69,11 @@ in
       nixpkgs.overlays = [
         (final: prev: {
           cosmic-comp = prev.cosmic-comp.overrideAttrs (oldAttrs: {
-            patches = oldAttrs.patches or [ ]; # Concat list of patches here
+            # Concat list of patches here
+            patches = (oldAttrs.patches or [ ]) ++ [
+              ./no_ssd.patch
+              ./cosmic_smart_gaps.patch
+            ];
           });
         })
       ];
