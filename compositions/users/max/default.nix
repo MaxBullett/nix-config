@@ -204,6 +204,7 @@ mkMerge [
             directory = "code";
             how = "symlink";
           }
+          ".local/share/fonts"
         ];
         files = [ ];
       };
