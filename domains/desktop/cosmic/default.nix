@@ -95,7 +95,12 @@ in
 
         # Using system76's scheduler greatly improves performance of cosmic.
         system76-scheduler.enable = true;
+
+        # Force gnome-keyring usage to solve various keyring issues
+        gnome.gnome-keyring.enable = true;
       };
+
+      security.pam.services.cosmic-greeter.enableGnomeKeyring = true;
 
       environment.sessionVariables = {
         # Fix clipboard issues in COSMIC
