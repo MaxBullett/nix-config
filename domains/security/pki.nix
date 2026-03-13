@@ -26,8 +26,8 @@ in
         Paths to CA certificate files to trust system-wide.
         These paths are evaluated at runtime, making them suitable for
         SOPS secrets or other dynamically-provisioned certificate sources.
-        Certificates will be added to the system trust store and trusted by
-        all applications (browsers, curl, openssl, etc.).
+        Certificates will be installed into the p11-kit trust anchor store
+        and trusted by all applications (browsers, curl, openssl, etc.).
       '';
       example = [
         config.sops.secrets."ca-certs/domain".path
@@ -43,13 +43,8 @@ in
       }
     ];
 
-    # Install p11-kit to enable Firefox to use system certificates
-    environment.systemPackages = with pkgs; [
-      p11-kit
-    ];
-
     systemd.services.install-custom-ca-certs = {
-      description = "Install custom CA certificates to system trust store";
+      description = "Install custom CA certificates into system trust stores";
       wantedBy = [ "multi-user.target" ];
       after = [ "sops-install-secrets.service" ];
       wants = [ "sops-install-secrets.service" ];
@@ -59,62 +54,44 @@ in
       };
       path = with pkgs; [
         coreutils
-        openssl
+        nss.tools
       ];
       script = ''
         set -euo pipefail
 
-        CERT_DIR="/etc/ssl/certs"
-        CUSTOM_BUNDLE="/etc/ssl/certs/ca-bundle-custom.crt"
-        SYSTEM_BUNDLE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+        # System NSS database (read by Chromium/Vivaldi)
+        NSS_DB="/etc/pki/nssdb"
+        mkdir -p "$NSS_DB"
+        if [ ! -f "$NSS_DB/cert9.db" ]; then
+          certutil -N -d "sql:$NSS_DB" --empty-password
+        fi
 
-        # Start with the system CA bundle
-        cp "$SYSTEM_BUNDLE" "$CUSTOM_BUNDLE"
+        # Extend system CA bundle for curl/openssl/etc
+        CUSTOM_BUNDLE="/etc/ssl/certs/ca-bundle-custom.crt"
+        cp -f "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt" "$CUSTOM_BUNDLE"
         chmod 644 "$CUSTOM_BUNDLE"
 
-        # Append each custom certificate to the bundle
         ${concatMapStringsSep "\n" (certPath: ''
           if [ -f "${certPath}" ]; then
             CERT_NAME="$(basename "${certPath}")"
 
-            # Validate it's a proper certificate
-            if openssl x509 -noout -text -in "${certPath}" >/dev/null 2>&1; then
-              # Copy individual certificate file
-              cp -f "${certPath}" "$CERT_DIR/$CERT_NAME"
-              chmod 644 "$CERT_DIR/$CERT_NAME"
+            # Add to system NSS database for Chromium/Vivaldi
+            certutil -A -d "sql:$NSS_DB" -n "$CERT_NAME" -t "CT,," -i "${certPath}"
+            echo "Added to NSS database: $CERT_NAME"
 
-              # Append to the combined bundle
-              echo "" >> "$CUSTOM_BUNDLE"
-              cat "${certPath}" >> "$CUSTOM_BUNDLE"
-
-              # Create hash-based symlink for OpenSSL compatibility
-              HASH=$(openssl x509 -noout -hash -in "${certPath}")
-              SUFFIX=0
-              while [ -L "$CERT_DIR/$HASH.$SUFFIX" ] || [ -f "$CERT_DIR/$HASH.$SUFFIX" ]; do
-                SUFFIX=$((SUFFIX + 1))
-              done
-              ln -sf "$CERT_NAME" "$CERT_DIR/$HASH.$SUFFIX"
-
-              echo "Installed certificate: $CERT_NAME (hash: $HASH.$SUFFIX)"
-            else
-              echo "Error: Invalid certificate file: ${certPath}" >&2
-              exit 1
-            fi
+            # Append to CA bundle for curl/openssl
+            cat "${certPath}" >> "$CUSTOM_BUNDLE"
+            echo "Appended to CA bundle: $CERT_NAME"
           else
             echo "Error: Certificate file not found: ${certPath}" >&2
             exit 1
           fi
         '') cfg.certificatePaths}
 
-        # Create symlink for the custom bundle
-        ln -sf ca-bundle-custom.crt "$CERT_DIR/ca-certificates.crt"
-
-        echo "Custom CA certificates installed successfully"
-        echo "Combined CA bundle created at: $CUSTOM_BUNDLE"
+        ln -sf ca-bundle-custom.crt /etc/ssl/certs/ca-certificates.crt
       '';
     };
 
-    # Set environment variables to use the custom CA bundle
     environment.sessionVariables = {
       SSL_CERT_FILE = "/etc/ssl/certs/ca-bundle-custom.crt";
       CURL_CA_BUNDLE = "/etc/ssl/certs/ca-bundle-custom.crt";
