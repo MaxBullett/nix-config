@@ -145,6 +145,7 @@ let
       config = mkIf cfg.enable {
         xdg.userDirs = {
           enable = true;
+          setSessionVariables = true;
           inherit (cfg) createDirectories;
 
           # Convert relative paths to $HOME-prefixed paths
