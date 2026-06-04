@@ -209,6 +209,10 @@ in
         name = "catppuccin-macchiato-sky-cursors";
         size = 24;
       };
+      fonts.packages = with pkgs; [
+        source-sans
+        roboto
+      ];
     };
     applications.steam = {
       enable = true;

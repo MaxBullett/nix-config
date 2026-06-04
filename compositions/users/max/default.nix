@@ -130,6 +130,7 @@ mkMerge [
         tools = {
           yazi.enable = true;
           ripgrep.enable = true;
+          xelatex.enable = true;
         };
 
         desktop.xdg = {
