@@ -20,6 +20,8 @@ let
       texliveEnv = pkgs.texlive.combine {
         inherit (pkgs.texlive)
           scheme-basic
+          # XeLaTeX engine
+          xetex
           # XeLaTeX font loading
           fontspec
           unicode-math
@@ -27,6 +29,8 @@ let
           fontawesome6
           accsupp
           tcolorbox
+          tikzfill
+          pgf
           # Layout and spacing
           geometry
           fancyhdr
@@ -38,6 +42,7 @@ let
           xcolor
           # Utilities
           xifthen
+          ifmtarg
           xstring
           etoolbox
           iftex
