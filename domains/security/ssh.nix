@@ -24,8 +24,14 @@ let
   anyEnabled = enabledUsers != { };
 
   sshHomeModule =
-    { config, ... }:
+    { config, lib, ... }:
     let
+      inherit (lib)
+        mkEnableOption
+        mkIf
+        mkOption
+        types
+        ;
       userCfg = config.domains.security.ssh;
     in
     {
@@ -37,104 +43,56 @@ let
           default = "";
           description = ''
             Raw SSH config to add to ~/.ssh/config.
-            For host-specific settings, prefer using matchBlocks for type safety.
-            Use this only for options not available in matchBlocks.
+            Use this only for directives not representable as settings blocks.
           '';
           example = ''
-            # Advanced options not available in matchBlocks
             ControlMaster auto
             ControlPath ~/.ssh/sockets/%r@%h:%p
             ControlPersist 10m
           '';
         };
 
-        matchBlocks = mkOption {
-          type = types.attrsOf (
+        settings = mkOption {
+          type = lib.hm.types.dagOf (
             types.submodule {
-              options = {
-                hostname = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "The hostname to connect to";
-                };
-
-                user = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "User to log in as";
-                };
-
-                port = mkOption {
-                  type = types.nullOr types.int;
-                  default = null;
-                  description = "Port to connect to on the remote host";
-                };
-
-                identityFile = mkOption {
-                  type = types.nullOr (types.either types.str (types.listOf types.str));
-                  default = null;
-                  description = "Identity file(s) to use for authentication";
-                };
-
-                identitiesOnly = mkOption {
-                  type = types.nullOr types.bool;
-                  default = null;
-                  description = "Only use identity files configured in SSH config";
-                };
-
-                forwardAgent = mkOption {
-                  type = types.nullOr types.bool;
-                  default = null;
-                  description = "Forward SSH agent to the remote machine";
-                };
-
-                extraOptions = mkOption {
-                  type = types.attrsOf types.str;
-                  default = { };
-                  description = "Additional SSH options for this host";
-                };
-              };
+              freeformType = types.attrsOf types.anything;
             }
           );
           default = { };
           description = ''
-            SSH host configurations using structured options.
-            Alternative to extraConfig for type-safe host configuration.
+            SSH host configuration blocks, passed directly to `programs.ssh.settings`.
+            Attribute names are `Host` patterns unless they start with `Host ` or
+            `Match `, in which case they are used as-is as the block header.
+            Option names follow OpenSSH directive naming (PascalCase).
           '';
           example = lib.literalExpression ''
             {
               "github.com" = {
-                identityFile = "~/.ssh/id_ed25519";
-                identitiesOnly = true;
+                IdentityFile = "~/.ssh/id_ed25519";
+                IdentitiesOnly = true;
               };
               "*.example.com" = {
-                user = "admin";
-                port = 2222;
+                User = "admin";
+                Port = 2222;
               };
             }
           '';
         };
-
       };
 
       config = mkIf userCfg.enable {
         programs.ssh = {
           enable = true;
           inherit (userCfg) extraConfig;
-
-          # Disable default config to avoid future deprecation warnings
           enableDefaultConfig = false;
-
-          # Manually configure defaults via global match block
-          matchBlocks = userCfg.matchBlocks // {
+          settings = userCfg.settings // {
             "*" = {
-              # Automatically add keys to agent when first used
-              addKeysToAgent = "yes";
-            };
+              AddKeysToAgent = "yes";
+            }
+            // (userCfg.settings."*" or { });
           };
         };
 
-        # Ensure .ssh directory exists with correct permissions
         home.file.".ssh/.keep".text = "";
         home.file.".ssh/.keep".onChange = ''
           chmod 700 ~/.ssh

@@ -89,15 +89,15 @@ mkMerge [
             extraConfig = ''
               Include ${config.sops.secrets."ssh/work-config".path}
             '';
-            matchBlocks = {
+            settings = {
               "github.com" = {
-                identityFile = "~/.ssh/id_ed25519";
-                identitiesOnly = true;
+                IdentityFile = "~/.ssh/id_ed25519";
+                IdentitiesOnly = true;
               };
               "10.10.10.101" = {
-                user = "root";
-                identityFile = "~/.ssh/id_ed25519";
-                identitiesOnly = true;
+                User = "root";
+                IdentityFile = "~/.ssh/id_ed25519";
+                IdentitiesOnly = true;
               };
             };
           };
