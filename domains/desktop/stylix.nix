@@ -17,9 +17,8 @@ let
   cfg = config.domains.desktop.stylix;
 
   # Home Manager module for Stylix release checks
-  stylixHomeModule = { config, ... }: {
+  stylixHomeModule = _: {
     stylix.enableReleaseChecks = false;
-    gtk.gtk4.theme = config.gtk.theme;
   };
 in
 {
