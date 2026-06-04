@@ -43,6 +43,7 @@ let
       config = mkIf cfg.enable {
         programs.firefox = {
           enable = true;
+          configPath = "${config.xdg.configHome}/mozilla/firefox";
 
           profiles.default = {
             id = 0;
@@ -87,7 +88,7 @@ in
       domains.storage.btrfs.preservation.mounts."/persist" = {
         users = mapAttrs (username: _: {
           directories = [
-            ".mozilla"
+            ".config/mozilla"
           ];
         }) enabledUsers;
       };
