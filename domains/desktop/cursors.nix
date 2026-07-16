@@ -70,6 +70,7 @@ in
     home-manager.sharedModules = [
       {
         home.pointerCursor = {
+          enable = true;
           inherit (cfg) package name size;
           gtk.enable = true;
           x11.enable = true;
