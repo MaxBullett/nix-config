@@ -63,6 +63,10 @@ in
             # Claude Code configuration and state
             ".claude"
           ];
+          files = [
+            # Claude Code global config (auth, onboarding state, project list)
+            ".claude.json"
+          ];
         }) enabledUsers;
       };
     })
