@@ -113,6 +113,7 @@ in
       };
 
       environment.systemPackages = with pkgs; [
+        cosmic-monitor
         ffmpegthumbnailer
         wl-clipboard
       ];
