@@ -17,9 +17,8 @@ let
     let
       cfg = config.domains.tools.xelatex;
 
-      texliveEnv = pkgs.texlive.combine {
-        inherit (pkgs.texlive)
-          scheme-basic
+      texliveEnv = pkgs.texliveSmall.withPackages (
+        ps: with ps; [
           # XeLaTeX engine
           xetex
           # XeLaTeX font loading
@@ -49,8 +48,8 @@ let
           hyperref
           bookmark
           tools
-          ;
-      };
+        ]
+      );
     in
     {
       options.domains.tools.xelatex = {
