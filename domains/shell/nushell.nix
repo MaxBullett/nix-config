@@ -32,7 +32,8 @@ let
       cfg = config.domains.shell.nushell;
 
       defaultPlugins = with pkgs.nushellPlugins; [
-        polars
+        # polars Removed pending https://github.com/NixOS/nixpkgs/pull/546343
+        # TODO: add "plugin add ${pkgs.nushellPlugins.polars}/bin/nu_plugin_polars" to extraConfig
         gstat
         formats
         query
@@ -97,7 +98,6 @@ let
             def l   [...args] { ls     ...(if $args == [] {["."]} else {$args}) | sort-by type name -i }
 
             # Register plugins
-            plugin add ${pkgs.nushellPlugins.polars}/bin/nu_plugin_polars
             plugin add ${pkgs.nushellPlugins.gstat}/bin/nu_plugin_gstat
             plugin add ${pkgs.nushellPlugins.formats}/bin/nu_plugin_formats
             plugin add ${pkgs.nushellPlugins.query}/bin/nu_plugin_query

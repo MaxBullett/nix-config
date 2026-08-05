@@ -221,6 +221,16 @@ in
     development = {
       ansible.enable = true;
       docker.enable = true;
+      ollama = {
+        enable = true;
+        package = pkgs.ollama-rocm;
+        host = "0.0.0.0";
+        loadModels = [ "qwen3:30b-a3b" ];
+        environmentVariables = {
+          # gfx1031 (this dGPU) has no prebuilt ROCm kernels; treat it as gfx1030.
+          HSA_OVERRIDE_GFX_VERSION = "10.3.0";
+        };
+      };
     };
   };
 
