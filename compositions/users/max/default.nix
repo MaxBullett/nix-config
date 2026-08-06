@@ -179,12 +179,9 @@ mkMerge [
             enable = true;
             enableVirtualCamera = true;
           };
-          flatpak = {
-            enable = true;
-            betaPackages = [ "com.stremio.Stremio" ];
-          };
           figma-linux.enable = true;
           proton-pass.enable = true;
+          stremio.enable = true;
         };
       };
 
