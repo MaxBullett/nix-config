@@ -182,6 +182,7 @@ mkMerge [
           figma-linux.enable = true;
           proton-pass.enable = true;
           stremio.enable = true;
+          vlc.enable = true;
         };
       };
 
