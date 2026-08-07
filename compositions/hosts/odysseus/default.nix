@@ -192,7 +192,10 @@ in
         extraBackends = with pkgs; [ epkowa ];
       };
     };
-    audio.pipewire.enable = true;
+    audio = {
+      pipewire.enable = true;
+      multi-headphone.enable = true;
+    };
     desktop = {
       cosmic = {
         enable = true;
