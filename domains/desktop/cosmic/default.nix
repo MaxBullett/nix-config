@@ -71,8 +71,9 @@ in
           cosmic-comp = prev.cosmic-comp.overrideAttrs (oldAttrs: {
             # Concat list of patches here
             patches = (oldAttrs.patches or [ ]) ++ [
-              ./no_ssd.patch
-              ./cosmic_smart_gaps.patch
+              ./no_ssd.patch # https://github.com/pop-os/cosmic-comp/issues/376
+              ./cosmic_smart_gaps.patch # https://github.com/pop-os/cosmic-comp/issues/723
+              ./cosmic-comp-idle-notify-activity.patch # https://github.com/pop-os/cosmic-greeter/issues/19
             ];
           });
         })
