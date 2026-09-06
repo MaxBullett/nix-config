@@ -228,7 +228,10 @@ in
         enable = true;
         package = pkgs.ollama-rocm;
         host = "0.0.0.0";
-        loadModels = [ "qwen3:30b-a3b" ];
+        loadModels = [
+          "qwen3.8:latest"
+          "moophlo/Qwen3-Coder-30B-A3B-Instruct-GGUF:latest"
+        ];
         environmentVariables = {
           # gfx1031 (this dGPU) has no prebuilt ROCm kernels; treat it as gfx1030.
           HSA_OVERRIDE_GFX_VERSION = "10.3.0";

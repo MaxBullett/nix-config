@@ -71,27 +71,33 @@ in
     };
 
     extraConfig = mkOption {
-      type = types.lines;
-      default = "";
+      type = types.attrsOf (
+        types.oneOf [
+          types.str
+          types.int
+          types.bool
+        ]
+      );
+      default = { };
       description = ''
-        Additional journald configuration.
-        See journald.conf(5) for available options.
+        Additional journald configuration, as an attrset of Journal section
+        settings. See journald.conf(5) for available options.
       '';
-      example = ''
-        Compress=yes
-        RateLimitBurst=10000
-      '';
+      example = {
+        Compress = true;
+        RateLimitBurst = 10000;
+      };
     };
   };
 
   config = mkIf cfg.enable {
-    services.journald.extraConfig = ''
-      Storage=${cfg.storage}
-      SystemMaxUse=${cfg.maxSize}
-      ${lib.optionalString (cfg.maxRetentionSec != null) "MaxRetentionSec=${cfg.maxRetentionSec}"}
-      ${lib.optionalString (cfg.maxFileSec != null) "MaxFileSec=${cfg.maxFileSec}"}
-      ${cfg.extraConfig}
-    '';
+    services.journald.settings.Journal = {
+      Storage = cfg.storage;
+      SystemMaxUse = cfg.maxSize;
+    }
+    // lib.optionalAttrs (cfg.maxRetentionSec != null) { MaxRetentionSec = cfg.maxRetentionSec; }
+    // lib.optionalAttrs (cfg.maxFileSec != null) { MaxFileSec = cfg.maxFileSec; }
+    // cfg.extraConfig;
 
     domains.storage.btrfs.preservation.mounts."/persist".directories = mkIf (
       preservationEnabled && cfg.storage == "persistent"
