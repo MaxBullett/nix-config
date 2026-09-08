@@ -120,6 +120,7 @@ mkMerge [
           };
           github-cli.enable = true;
           claude-code.enable = true;
+          thinkrail.enable = true;
           jetbrains = {
             dataspell.enable = true;
             ideaUltimate.enable = true;
