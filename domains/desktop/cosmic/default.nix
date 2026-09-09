@@ -115,6 +115,9 @@ in
 
       environment.systemPackages = with pkgs; [
         cosmic-monitor
+        cosmic-ext-applet-caffeine
+        cosmic-ext-applet-minimon
+        cosmic-ext-applet-weather
         ffmpegthumbnailer
         wl-clipboard
       ];
