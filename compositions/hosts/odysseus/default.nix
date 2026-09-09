@@ -88,7 +88,9 @@ in
             key = "maxbullett.cachix.org-1:/6uBIAw06/eUnFR/UTgTk4w9ZfSAtrf3a1R9aOkpixY=";
           }
           {
-            # Prebuilt packages from llm-agents.nix (claude-desktop)
+            # Prebuilt packages from the llm-agents.nix input (claude-desktop).
+            # Trusting a substituter is a host decision, so it is wired here
+            # rather than by the domain that happens to benefit from it.
             url = "https://cache.numtide.com";
             key = "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=";
           }
