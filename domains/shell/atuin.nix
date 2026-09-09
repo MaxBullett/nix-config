@@ -28,6 +28,30 @@ let
     }:
     let
       cfg = config.domains.shell.atuin;
+
+      nushellEnabled = config.domains.shell.nushell.enable or false;
+
+      # Upstream `atuin init nu` names both the Ctrl-R and the Up-arrow
+      # keybinding "atuin"; nushell >= 0.115 warns about keybindings sharing a
+      # name on every prompt. Generate the same file ourselves and give each
+      # binding a unique name.
+      #
+      # Fixed upstream in atuin 18.21.0 (atuinsh/atuin#3971, PR #3975); nixpkgs
+      # is still on 18.19.0 with the bump open as NixOS/nixpkgs#559134. Drop
+      # this and set enableNushellIntegration back to `nushellEnabled` once
+      # pkgs.atuin >= 18.21.0.
+      atuinNushellInit =
+        pkgs.runCommand "atuin-nushell-config.nu"
+          {
+            nativeBuildInputs = [ pkgs.writableTmpDirAsHomeHook ];
+          }
+          ''
+            ${lib.getExe config.programs.atuin.package} init nu > init.nu
+            ${lib.getExe pkgs.gnused} \
+              -e '0,/name: atuin$/s//name: atuin_ctrl_r/' \
+              -e 's/name: atuin$/name: atuin_up_arrow/' \
+              init.nu > "$out"
+          '';
     in
     {
       options.domains.shell.atuin = {
@@ -65,7 +89,9 @@ let
           {
             programs.atuin = {
               enable = true;
-              enableNushellIntegration = config.domains.shell.nushell.enable or false;
+              # Integration is wired up manually below so the generated
+              # keybindings can be given unique names.
+              enableNushellIntegration = false;
 
               settings = {
                 # Search settings
@@ -98,6 +124,13 @@ let
             # Install atuin in home.packages to ensure it's available when nushell starts
             home.packages = [ pkgs.atuin ];
           }
+
+          (mkIf nushellEnabled {
+            # Load after fzf so atuin keeps Ctrl-R in nushell.
+            programs.nushell.extraConfig = lib.mkOrder 2000 ''
+              source ${atuinNushellInit}
+            '';
+          })
         ]
       );
     };
