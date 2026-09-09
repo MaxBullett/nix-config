@@ -87,6 +87,11 @@ in
             url = "https://maxbullett.cachix.org";
             key = "maxbullett.cachix.org-1:/6uBIAw06/eUnFR/UTgTk4w9ZfSAtrf3a1R9aOkpixY=";
           }
+          {
+            # Prebuilt packages from llm-agents.nix (claude-desktop)
+            url = "https://cache.numtide.com";
+            key = "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=";
+          }
         ];
         push = {
           enable = true;

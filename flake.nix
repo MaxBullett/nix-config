@@ -48,6 +48,11 @@
 
     # Declarative flatpak management (https://github.com/gmodena/nix-flatpak)
     nix-flatpak.url = "github:gmodena/nix-flatpak";
+
+    # AI agent/tool packages (https://github.com/numtide/llm-agents.nix)
+    # Deliberately no `inputs.nixpkgs.follows`: upstream only builds and caches
+    # against its own pinned nixpkgs-unstable.
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs =
