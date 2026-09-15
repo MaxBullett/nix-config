@@ -125,7 +125,7 @@ mkMerge [
           };
           thinkrail.enable = true;
           jetbrains = {
-            dataspell.enable = true;
+            pycharm.enable = true;
             ideaUltimate.enable = true;
           };
           python.enable = true;

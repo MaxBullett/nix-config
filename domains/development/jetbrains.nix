@@ -17,7 +17,7 @@ let
     let
       jb = userCfg.domains.development.jetbrains or { };
     in
-    (jb.dataspell.enable or false) || (jb.ideaUltimate.enable or false)
+    (jb.pycharm.enable or false) || (jb.ideaUltimate.enable or false)
   ) config.home-manager.users;
 
   anyEnabled = enabledUsers != { };
@@ -32,14 +32,14 @@ let
       cfg = config.domains.development.jetbrains;
 
       selectedIDEs = lib.flatten [
-        (lib.optional cfg.dataspell.enable pkgs.jetbrains.dataspell)
+        (lib.optional cfg.pycharm.enable pkgs.jetbrains.pycharm)
         (lib.optional cfg.ideaUltimate.enable pkgs.jetbrains.idea)
       ];
     in
     {
       options.domains.development.jetbrains = {
-        dataspell = {
-          enable = mkEnableOption "DataSpell (Python data science IDE)";
+        pycharm = {
+          enable = mkEnableOption "PyCharm (Python IDE)";
         };
 
         ideaUltimate = {
@@ -47,7 +47,7 @@ let
         };
       };
 
-      config = mkIf (cfg.dataspell.enable || cfg.ideaUltimate.enable) {
+      config = mkIf (cfg.pycharm.enable || cfg.ideaUltimate.enable) {
         home.packages = selectedIDEs;
       };
     };
