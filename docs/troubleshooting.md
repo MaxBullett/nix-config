@@ -120,6 +120,46 @@ option1 = mkDefault "value1";
 option2 = mkDefault "value2";
 ```
 
+### Go Builder Alias Removed (EOL)
+
+**Symptom:** Build fails with something like:
+```
+error: Go 1.25 is end-of-life, and 'buildGo125Module' has been removed. Please use a newer builder version.
+```
+often surfacing while evaluating an unrelated-looking option (e.g. `sops.package` inside
+sops-nix's activation script) rather than an obviously Go-related package.
+
+**Cause:** nixpkgs periodically removes end-of-life `buildGoNNNModule` builder aliases. On
+`nixos-unstable` this sometimes lands before every package referencing the alias has been
+migrated to a newer builder, causing a transient failure for anyone on that exact revision.
+
+**First check for uncommitted lockfile drift** before assuming the committed history is
+broken — a local `nix flake update` run earlier (and forgotten) can leave `flake.lock`
+pinned to a newer, broken revision than what's actually committed:
+```bash
+git diff HEAD -- flake.lock   # any uncommitted changes at all?
+git stash push -- flake.lock  # if so, stash them (restores the committed lockfile)
+nixos-rebuild build --flake .#<host>   # re-check against the committed lockfile
+```
+
+**If the committed lockfile itself is the broken one:**
+```bash
+# 1. Try updating past the breakage first
+nix flake update nixpkgs
+nixos-rebuild build --flake .#<host>   # safe, non-activating
+
+# 2. If still broken, pin back to the previous known-good nixpkgs commit
+git log --oneline -- flake.lock
+git show <prev-commit>:flake.lock | python3 -c \
+  "import json,sys; d=json.load(sys.stdin); n=d['nodes']; k=n['root']['inputs']['nixpkgs']; print(n[k]['locked'])"
+nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/<rev>
+nixos-rebuild build --flake .#<host>
+```
+
+Note: `nix flake lock --update-input <name>` is a deprecated alias for a *full*
+`nix flake update` (it updates every input, not just `<name>`) — use
+`nix flake update <name>` to scope the update to one input.
+
 ## Secrets Issues
 
 ### Decryption Fails
