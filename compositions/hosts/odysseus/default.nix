@@ -213,6 +213,7 @@ in
         };
       };
       cups.enable = true;
+      keychron.enable = true;
       sane = {
         enable = true;
         extraBackends = with pkgs; [ epkowa ];
