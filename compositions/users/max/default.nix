@@ -185,8 +185,17 @@ mkMerge [
           };
           figma-linux.enable = true;
           proton-pass.enable = true;
-          stremio.enable = true;
           vlc.enable = true;
+          flatpak = {
+            enable = true;
+            bundlePackages = [
+              {
+                appId = "com.nuvio.media.desktop";
+                url = "https://github.com/NuvioMedia/NuvioDesktop/releases/download/0.1.24-alpha/Nuvio-Linux-x86_64-0.1.24-alpha.flatpak";
+                hash = "sha256-8h1O4gFPakoUUWCNgzf8WmkfiQAYlCtSG2FSxt7gxoU=";
+              }
+            ];
+          };
         };
       };
 

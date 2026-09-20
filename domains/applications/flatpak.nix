@@ -28,8 +28,43 @@ let
       inherit appId origin;
     }) packages;
 
+  # Transform pinned bundle definitions into nix-flatpak's `bundle` package format.
+  # `sha256` is required: nix-flatpak only (re)installs a bundle when it differs
+  # between the previous and new state, so a null value means it never installs.
+  transformBundles =
+    pkgs: bundles:
+    map (bundle: {
+      inherit (bundle) appId;
+      sha256 = bundle.hash;
+      bundle = "${pkgs.fetchurl { inherit (bundle) url hash; }}";
+    }) bundles;
+
+  bundleType = types.submodule {
+    options = {
+      appId = mkOption {
+        type = types.str;
+        description = "The fully qualified app ID of the Flatpak bundle.";
+        example = "com.nuvio.media.desktop";
+      };
+
+      url = mkOption {
+        type = types.str;
+        description = "Download URL of the .flatpak bundle file.";
+      };
+
+      hash = mkOption {
+        type = types.str;
+        description = ''
+          SRI hash of the bundle file (e.g. obtained via `nix-prefetch-url --type sha256 <url>`
+          piped through `nix hash convert --hash-algo sha256 --to sri`).
+        '';
+        example = "sha256-8h1O4gFPakoUUWCNgzf8WmkfiQAYlCtSG2FSxt7gxoU=";
+      };
+    };
+  };
+
   flatpakHomeModule =
-    { config, ... }:
+    { config, pkgs, ... }:
     {
       imports = [ inputs.nix-flatpak.homeManagerModules.nix-flatpak ];
 
@@ -64,6 +99,28 @@ let
             ]
           '';
         };
+
+        bundlePackages = mkOption {
+          type = with types; listOf bundleType;
+          default = [ ];
+          description = ''
+            Flatpak applications installed from a pinned bundle URL rather than a
+            Flathub remote (e.g. apps that only publish a standalone .flatpak on
+            GitHub releases). Unlike `packages`/`betaPackages`, updates are not
+            automatic on activation - bump `url`/`hash` to a newer release when
+            you want one. The app's runtime/SDK still resolves against the
+            configured remotes (Flathub), so it must be published there.
+          '';
+          example = lib.literalExpression ''
+            [
+              {
+                appId = "com.nuvio.media.desktop";
+                url = "https://github.com/NuvioMedia/NuvioDesktop/releases/download/0.1.24-alpha/Nuvio-Linux-x86_64-0.1.24-alpha.flatpak";
+                hash = "sha256-8h1O4gFPakoUUWCNgzf8WmkfiQAYlCtSG2FSxt7gxoU=";
+              }
+            ]
+          '';
+        };
       };
 
       config = mkIf config.domains.applications.flatpak.enable {
@@ -85,7 +142,8 @@ let
           # Transform packages into nix-flatpak format
           packages =
             transformPackages config.domains.applications.flatpak.packages "flathub"
-            ++ transformPackages config.domains.applications.flatpak.betaPackages "flathub-beta";
+            ++ transformPackages config.domains.applications.flatpak.betaPackages "flathub-beta"
+            ++ transformBundles pkgs config.domains.applications.flatpak.bundlePackages;
 
           # Update on activation for fresh installs
           update.onActivation = true;
