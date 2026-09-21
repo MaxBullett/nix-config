@@ -55,25 +55,6 @@ in
     overwriteBackup = true;
   };
 
-  nixpkgs.overlays = [
-    # Temporary: linux-firmware regressed amdgpu on this host's Radeon 680M
-    # (gfx1103), freezing the screen during boot. The kernel itself is fine;
-    # only the bundled firmware blob is broken. Pin linux-firmware back to the
-    # last known-good upstream release until nixpkgs picks up the fix.
-    # https://github.com/NixOS/nixpkgs/issues/562919
-    (final: prev: {
-      linux-firmware = prev.linux-firmware.overrideAttrs (_: {
-        version = "20260810";
-        src = final.fetchFromGitLab {
-          owner = "kernel-firmware";
-          repo = "linux-firmware";
-          tag = "20260810";
-          hash = "sha256-P/fPpqaatp8Z2GV+I/OChiWGn6AhV+8w1RMFuX/LqHc=";
-        };
-      });
-    })
-  ];
-
   domains = {
     system = {
       localization = {
