@@ -16,10 +16,21 @@ let
 
   cfg = config.domains.desktop.stylix;
 
-  # Home Manager module for Stylix release checks
-  stylixHomeModule = _: {
-    stylix.enableReleaseChecks = false;
-  };
+  # Home Manager module for Stylix release checks and GTK CSS ownership
+  stylixHomeModule =
+    { config, ... }:
+    {
+      stylix.enableReleaseChecks = false;
+
+      # COSMIC's GTK theme sync replaces these with symlinks into
+      # ~/.config/gtk-4.0/cosmic/. Home Manager never applies
+      # backupFileExtension to a foreign symlink, so without `force` every
+      # switch fails with "Existing file ... would be clobbered".
+      xdg.configFile = mkIf config.stylix.targets.gtk.enable {
+        "gtk-3.0/gtk.css".force = true;
+        "gtk-4.0/gtk.css".force = true;
+      };
+    };
 in
 {
   imports = [ inputs.stylix.nixosModules.stylix ];
