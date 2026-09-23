@@ -191,8 +191,8 @@ mkMerge [
             bundlePackages = [
               {
                 appId = "com.nuvio.media.desktop";
-                url = "https://github.com/NuvioMedia/NuvioDesktop/releases/download/0.1.24-alpha/Nuvio-Linux-x86_64-0.1.24-alpha.flatpak";
-                hash = "sha256-8h1O4gFPakoUUWCNgzf8WmkfiQAYlCtSG2FSxt7gxoU=";
+                url = "https://github.com/NuvioMedia/NuvioDesktop/releases/download/0.1.25-alpha/Nuvio-Linux-x86_64-0.1.25-alpha.flatpak";
+                hash = "sha256-jTf5o0oEPxrW0UvCg7W7PDFyPBoxm4R4fS3rVp7RW/k=";
               }
             ];
           };
