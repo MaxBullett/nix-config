@@ -66,6 +66,8 @@ mkMerge [
               doco = "docker compose";
               jc = "journalctl";
               sc = "systemctl";
+              edit = "hx";
+              helix = "hx";
             };
           };
           starship.enable = true;
