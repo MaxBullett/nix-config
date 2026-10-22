@@ -119,6 +119,7 @@ mkMerge [
               enable = true;
               key = "~/.ssh/id_ed25519.pub";
             };
+            lfs.enable = true;
           };
           github-cli.enable = true;
           claude = {
@@ -137,6 +138,15 @@ mkMerge [
           yazi.enable = true;
           ripgrep.enable = true;
           xelatex.enable = true;
+          screenshot-ocr = {
+            enable = true;
+            enableLanguages = [
+              "deu"
+              "eng"
+              "fra"
+              "rus"
+            ];
+          };
         };
 
         desktop.xdg = {

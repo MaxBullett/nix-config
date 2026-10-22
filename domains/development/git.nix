@@ -99,6 +99,10 @@ let
           };
         };
 
+        lfs = {
+          enable = mkEnableOption "Git Large File Storage";
+        };
+
         delta = {
           enable = mkEnableOption "Delta syntax highlighting" // {
             default = true;
@@ -117,6 +121,10 @@ let
         programs.git = {
           enable = true;
           package = pkgs.git;
+
+          lfs = {
+            inherit (cfg.lfs) enable;
+          };
 
           settings = lib.mkMerge [
             {

@@ -48,6 +48,16 @@ let
     userCfg: userCfg.domains.applications.obs-studio.enableVirtualCamera or false
   ) (builtins.attrValues enabledUsers);
 
+  # Kernel 7.3's kbuild runs depmod during `modules_install`, so v4l2loopback ships
+  # its own modules.* index files, which collide with the kernel's when NixOS merges
+  # module packages. Strip them; the system-wide depmod regenerates them anyway.
+  # TODO: drop (and go back to programs.obs-studio.enableVirtualCamera) once fixed in nixpkgs.
+  v4l2loopback = config.boot.kernelPackages.v4l2loopback.overrideAttrs (old: {
+    postInstall = (old.postInstall or "") + ''
+      rm -f $out/lib/modules/*/modules.*
+    '';
+  });
+
   obsHomeModule = {
     options.domains.applications.obs-studio = {
       enable = mkEnableOption "OBS Studio screen recording and streaming";
@@ -88,7 +98,6 @@ in
     (mkIf anyEnabled {
       programs.obs-studio = {
         enable = true;
-        enableVirtualCamera = anyVirtualCamera;
         plugins = allPlugins;
       };
 
@@ -96,6 +105,19 @@ in
         enable = true;
         enable32Bit = true;
       };
+    })
+
+    # Mirrors programs.obs-studio.enableVirtualCamera, using the patched module above.
+    (mkIf (anyEnabled && anyVirtualCamera) {
+      boot = {
+        kernelModules = [ "v4l2loopback" ];
+        extraModulePackages = [ v4l2loopback ];
+        extraModprobeConfig = ''
+          options v4l2loopback devices=1 video_nr=1 card_label="OBS Cam" exclusive_caps=1
+        '';
+      };
+
+      security.polkit.enable = true;
     })
 
     (mkIf (anyEnabled && (config.domains.storage.btrfs.preservation.enable or false)) {
